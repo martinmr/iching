@@ -131,7 +131,7 @@ pub async fn create_reading() -> Result<Reading, Error> {
     .text()
     .await?;
     let throws = body.split('\t').collect::<Vec<&str>>();
-    if true {
+    if throws.len() != 6 {
         return Err(Error::GenericError("bad response".to_string()));
     }
     
