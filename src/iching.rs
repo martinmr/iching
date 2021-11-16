@@ -1,4 +1,5 @@
 use crate::error::Error;
+use rand::Rng;
 use std::collections::HashMap;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -26,6 +27,22 @@ pub struct Hexagram {
 pub struct Reading {
     present: Hexagram,
     future: Option<Hexagram>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Mode {
+    Random,
+    Pseudorandom,
+}
+
+impl From<&String> for Mode {
+    fn from(val: &String) -> Self {
+        match val.as_str() {
+            "--random" => Mode::Random,
+            "--pseudorandom" => Mode::Pseudorandom,
+            _ => Mode::Random,
+        }
+    }
 }
 
 const fn create_hexagram(hexagram_num: u8, input_lines: [u8; 6]) -> Hexagram {
@@ -111,8 +128,6 @@ static HEXAGRAMS: [Hexagram; 64] = [
     create_hexagram(64, [0, 0, 0, 0, 0, 0]),
 ];
 
-
-
 fn hexagram_index() -> HashMap<[Line; 6], u8> {
     let mut index = HashMap::new();
     for (i, hexagram) in HEXAGRAMS.iter().enumerate() {
@@ -121,37 +136,59 @@ fn hexagram_index() -> HashMap<[Line; 6], u8> {
     index
 }
 
-pub async fn create_reading() -> Result<Reading, Error> {
-    let index = hexagram_index();
-    
+pub async fn random_reading() -> Result<Vec<u8>, Error> {
     let body = reqwest::get(
         "https://www.random.org/integers/?num=6&min=6&max=9&col=6&base=10&format=plain&rnd=new",
     )
     .await?
     .text()
     .await?;
-    let throws = body.split('\t').collect::<Vec<&str>>();
+
+    let throws = body
+        .split('\t')
+        .map(|s| -> u8 { s.parse::<u8>().unwrap() })
+        .collect::<Vec<u8>>();
     if throws.len() != 6 {
         return Err(Error::GenericError("bad response".to_string()));
     }
-    
+    Ok(throws)
+}
+
+pub fn pseudorandom_reading() -> Vec<u8> {
+    let mut rng = rand::thread_rng();
+    let mut throws = Vec::new();
+    for _ in 0..6 {
+        throws.push(rng.gen())
+    }
+    throws
+}
+
+pub async fn create_reading(mode: Mode) -> Result<Reading, Error> {
+    let index = hexagram_index();
+
+    let throws = if mode == Mode::Random {
+        random_reading().await?
+    } else {
+        pseudorandom_reading()
+    };
+
     let mut present_lines = [Line::Open; 6];
     let mut future_lines = [Line::Open; 6];
     for (i, throw) in throws.iter().enumerate() {
-        match *throw {
-            "6" => {
+        match throw {
+            6 => {
                 present_lines[i] = Line::Open;
                 future_lines[i] = Line::Closed;
             }
-            "7" => {
+            7 => {
                 present_lines[i] = Line::Closed;
                 future_lines[i] = Line::Closed;
             }
-            "8" => {
+            8 => {
                 present_lines[i] = Line::Open;
                 future_lines[i] = Line::Open;
             }
-            "9" => {
+            9 => {
                 present_lines[i] = Line::Closed;
                 future_lines[i] = Line::Open;
             }
