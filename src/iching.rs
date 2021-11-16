@@ -136,13 +136,10 @@ fn hexagram_index() -> HashMap<[Line; 6], u8> {
     index
 }
 
-pub async fn random_reading() -> Result<Vec<u8>, Error> {
-    let body = reqwest::get(
+pub fn random_reading() -> Result<Vec<u8>, Error> {
+    let body = reqwest::blocking::get(
         "https://www.random.org/integers/?num=6&min=6&max=9&col=6&base=10&format=plain&rnd=new",
-    )
-    .await?
-    .text()
-    .await?;
+    )?.text()?;
 
     let throws = body
         .split('\t')
@@ -163,11 +160,11 @@ pub fn pseudorandom_reading() -> Vec<u8> {
     throws
 }
 
-pub async fn create_reading(mode: Mode) -> Result<Reading, Error> {
+pub fn create_reading(mode: Mode) -> Result<Reading, Error> {
     let index = hexagram_index();
 
     let throws = if mode == Mode::Random {
-        random_reading().await?
+        random_reading()?
     } else {
         pseudorandom_reading()
     };
