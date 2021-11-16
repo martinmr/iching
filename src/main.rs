@@ -7,14 +7,14 @@ use clap::{App, Arg};
 
 fn main() -> Result<(), error::Error> {
     let matches = App::new("I Ching")
-        .version("1.0")
-        .about("CLI program to perform an I Ching reading")
+        .version("0.1.0")
+        .about("CLI program to generate an I Ching reading based on a random drawing")
         .arg(
             Arg::with_name("mode")
                 .long("mode")
                 .value_name("MODE")
                 .default_value("random")
-                .help("Mode used to generate the reading. Takes a value of either 'random' or 'pseudorandom'.")
+                .help("Mode used to generate the reading. Takes a value of either 'random' or 'pseudorandom'")
                 .takes_value(true),
         )
         .arg(

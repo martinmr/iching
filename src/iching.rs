@@ -167,19 +167,19 @@ fn hexagram_index() -> HashMap<[Line; 6], u8> {
     index
 }
 
-pub fn random_reading() -> Result<Vec<u8>, Error> {
-    let body = reqwest::blocking::get(
-        "https://www.random.org/integers/?num=6&min=6&max=9&col=6&base=10&format=plain&rnd=new",
-    )?
-    .text()?;
+static READING_URL: &str =
+    "https://www.random.org/integers/?num=6&min=6&max=9&col=6&base=10&format=plain&rnd=new";
 
-    let throws = body
+pub fn random_reading() -> Result<Vec<u8>, Error> {
+    let body = reqwest::blocking::get(READING_URL)?.text()?;
+
+    let throws: Vec<u8> = body
         .trim()
         .split('\t')
         .map(|s| -> u8 { s.parse::<u8>().unwrap() })
-        .collect::<Vec<u8>>();
+        .collect();
     if throws.len() != 6 {
-        return Err(Error::GenericError("bad response".to_string()));
+        return Err(Error::ResponseError);
     }
     Ok(throws)
 }
@@ -188,7 +188,7 @@ pub fn pseudorandom_reading() -> Vec<u8> {
     let mut rng = rand::thread_rng();
     let mut throws = Vec::new();
     for _ in 0..6 {
-        throws.push(rng.gen())
+        throws.push(rng.gen_range(6..10))
     }
     throws
 }
@@ -222,13 +222,11 @@ pub fn create_reading(mode: Mode, question: &str) -> Result<Reading, Error> {
                 present_lines[i] = Line::Closed;
                 future_lines[i] = Line::Open;
             }
-            _ => {
-                return Err(Error::GenericError("".to_string()));
-            }
+            _ => return Err(Error::InvalidDrawing),
         }
     }
-    let present_number = *index.get(&present_lines).unwrap();
-    let future_number = *index.get(&future_lines).unwrap();
+    let present_number = *index.get(&present_lines).ok_or(Error::InvalidDrawing)?;
+    let future_number = *index.get(&future_lines).ok_or(Error::InvalidDrawing)?;
 
     if present_lines == future_lines {
         Ok(Reading {

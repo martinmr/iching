@@ -1,10 +1,12 @@
 #[derive(Debug, PartialEq, Eq)]
 pub enum Error {
-    GenericError(String),
+    RequestError,
+    ResponseError,
+    InvalidDrawing,
 }
 
 impl From<reqwest::Error> for Error {
     fn from(_: reqwest::Error) -> Self {
-        Error::GenericError("dummy message".to_string())
+        Error::RequestError
     }
 }
