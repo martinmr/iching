@@ -1,6 +1,6 @@
 use crate::error::Error;
 use rand::Rng;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Line {
@@ -8,8 +8,8 @@ pub enum Line {
     Closed,
 }
 
-impl Line {
-    const fn from_u8(n: u8) -> Line {
+impl From<u8> for Line {
+    fn from(n: u8) -> Self {
         match n {
             0 => Line::Open,
             _ => Line::Closed,
@@ -24,13 +24,18 @@ pub struct Hexagram {
 }
 
 impl Hexagram {
-    pub fn print(&self) {
+    pub fn print(&self, changing_lines: Option<&HashSet<usize>>) {
         println!("     {}\n", self.number);
-        for line in self.lines.iter() {
+        for (i, line) in self.lines.iter().enumerate() {
             match line {
-                Line::Open => println!("----    ----"),
-                Line::Closed => println!("------------"),
+                Line::Open => print!("----    ----"),
+                Line::Closed => print!("------------"),
             }
+
+            if changing_lines != None && changing_lines.unwrap().contains(&i) {
+                print!("  *")
+            }
+            println!("")
         }
     }
 }
@@ -40,6 +45,7 @@ pub struct Reading {
     question: String,
     present: Hexagram,
     future: Option<Hexagram>,
+    changing_lines: HashSet<usize>,
 }
 
 impl Reading {
@@ -48,12 +54,12 @@ impl Reading {
             println!("Question: {}", self.question);
         }
         println!("\nPresent Hexagram\n");
-        self.present.print();
+        self.present.print(Some(&self.changing_lines));
 
-        match self.future {
+        match &self.future {
             Some(hex) => {
                 println!("\nFuture Hexagram\n");
-                hex.print();
+                hex.print(None);
             }
             None => (),
         }
@@ -76,93 +82,86 @@ impl From<&str> for Mode {
     }
 }
 
-const fn create_hexagram(hexagram_num: u8, input_lines: [u8; 6]) -> Hexagram {
-    let lines = [
-        Line::from_u8(input_lines[0]),
-        Line::from_u8(input_lines[1]),
-        Line::from_u8(input_lines[2]),
-        Line::from_u8(input_lines[3]),
-        Line::from_u8(input_lines[4]),
-        Line::from_u8(input_lines[5]),
-    ];
-
+fn create_hexagram(number: u8, input_lines: [u8; 6]) -> Hexagram {
+    let lines = input_lines.map(|l| Line::from(l));
     Hexagram {
+        number: number,
         lines: lines,
-        number: hexagram_num,
     }
 }
 
-static HEXAGRAMS: [Hexagram; 64] = [
-    create_hexagram(1, [1, 1, 1, 1, 1, 1]),
-    create_hexagram(2, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(3, [1, 0, 0, 0, 1, 0]),
-    create_hexagram(4, [0, 1, 0, 0, 0, 1]),
-    create_hexagram(5, [1, 1, 1, 0, 1, 0]),
-    create_hexagram(6, [0, 1, 0, 1, 1, 1]),
-    create_hexagram(7, [0, 1, 0, 0, 0, 0]),
-    create_hexagram(8, [0, 0, 0, 0, 1, 0]),
-    create_hexagram(9, [1, 1, 1, 0, 1, 1]),
-    create_hexagram(10, [1, 1, 0, 1, 1, 1]),
-    create_hexagram(11, [1, 1, 1, 0, 0, 0]),
-    create_hexagram(12, [0, 0, 0, 1, 1, 1]),
-    create_hexagram(13, [1, 0, 1, 1, 1, 1]),
-    create_hexagram(14, [1, 1, 1, 1, 0, 1]),
-    create_hexagram(15, [0, 0, 1, 0, 0, 0]),
-    create_hexagram(16, [0, 0, 0, 1, 0, 0]),
-    create_hexagram(17, [1, 0, 0, 1, 1, 0]),
-    create_hexagram(18, [0, 1, 1, 0, 0, 1]),
-    create_hexagram(19, [1, 1, 0, 0, 0, 0]),
-    create_hexagram(20, [0, 0, 0, 0, 1, 1]),
-    create_hexagram(21, [1, 0, 0, 1, 0, 1]),
-    create_hexagram(22, [1, 0, 1, 0, 0, 1]),
-    create_hexagram(23, [0, 0, 0, 0, 0, 1]),
-    create_hexagram(24, [1, 0, 0, 0, 0, 0]),
-    create_hexagram(25, [1, 0, 0, 1, 1, 1]),
-    create_hexagram(26, [1, 1, 1, 0, 0, 1]),
-    create_hexagram(27, [1, 0, 0, 0, 0, 1]),
-    create_hexagram(28, [0, 1, 1, 1, 1, 0]),
-    create_hexagram(29, [0, 1, 0, 0, 1, 0]),
-    create_hexagram(30, [1, 0, 1, 1, 0, 1]),
-    create_hexagram(31, [0, 0, 1, 1, 1, 0]),
-    create_hexagram(32, [0, 1, 1, 1, 0, 0]),
-    create_hexagram(33, [0, 0, 1, 1, 1, 1]),
-    create_hexagram(34, [1, 1, 1, 1, 0, 0]),
-    create_hexagram(35, [0, 0, 0, 1, 0, 1]),
-    create_hexagram(36, [1, 0, 1, 0, 0, 0]),
-    create_hexagram(37, [1, 0, 1, 0, 1, 1]),
-    create_hexagram(38, [1, 1, 0, 1, 0, 1]),
-    create_hexagram(39, [0, 0, 1, 0, 1, 0]),
-    create_hexagram(40, [0, 1, 0, 1, 0, 0]),
-    create_hexagram(41, [1, 1, 0, 0, 0, 1]),
-    create_hexagram(42, [1, 0, 0, 0, 1, 1]),
-    create_hexagram(43, [1, 1, 1, 1, 1, 0]),
-    create_hexagram(44, [0, 1, 1, 1, 1, 1]),
-    create_hexagram(45, [0, 0, 0, 1, 1, 0]),
-    create_hexagram(46, [0, 1, 1, 0, 0, 0]),
-    create_hexagram(47, [0, 1, 0, 1, 1, 0]),
-    create_hexagram(48, [0, 1, 1, 0, 1, 0]),
-    create_hexagram(49, [1, 0, 1, 1, 1, 0]),
-    create_hexagram(50, [0, 1, 1, 1, 0, 1]),
-    create_hexagram(51, [1, 0, 0, 1, 0, 0]),
-    create_hexagram(52, [0, 0, 1, 0, 0, 1]),
-    create_hexagram(53, [0, 0, 1, 0, 1, 1]),
-    create_hexagram(54, [1, 1, 0, 1, 0, 0]),
-    create_hexagram(55, [1, 0, 1, 1, 0, 0]),
-    create_hexagram(56, [0, 0, 1, 1, 0, 1]),
-    create_hexagram(57, [0, 1, 1, 0, 1, 1]),
-    create_hexagram(58, [1, 1, 0, 1, 1, 0]),
-    create_hexagram(59, [0, 1, 0, 0, 1, 1]),
-    create_hexagram(60, [1, 1, 0, 0, 1, 0]),
-    create_hexagram(61, [1, 1, 0, 0, 1, 1]),
-    create_hexagram(62, [0, 0, 1, 1, 0, 0]),
-    create_hexagram(63, [1, 0, 1, 0, 1, 0]),
-    create_hexagram(64, [0, 1, 0, 1, 0, 1]),
+static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
+    (1, [1, 1, 1, 1, 1, 1]),
+    (2, [0, 0, 0, 0, 0, 0]),
+    (3, [1, 0, 0, 0, 1, 0]),
+    (4, [0, 1, 0, 0, 0, 1]),
+    (5, [1, 1, 1, 0, 1, 0]),
+    (6, [0, 1, 0, 1, 1, 1]),
+    (7, [0, 1, 0, 0, 0, 0]),
+    (8, [0, 0, 0, 0, 1, 0]),
+    (9, [1, 1, 1, 0, 1, 1]),
+    (10, [1, 1, 0, 1, 1, 1]),
+    (11, [1, 1, 1, 0, 0, 0]),
+    (12, [0, 0, 0, 1, 1, 1]),
+    (13, [1, 0, 1, 1, 1, 1]),
+    (14, [1, 1, 1, 1, 0, 1]),
+    (15, [0, 0, 1, 0, 0, 0]),
+    (16, [0, 0, 0, 1, 0, 0]),
+    (17, [1, 0, 0, 1, 1, 0]),
+    (18, [0, 1, 1, 0, 0, 1]),
+    (19, [1, 1, 0, 0, 0, 0]),
+    (20, [0, 0, 0, 0, 1, 1]),
+    (21, [1, 0, 0, 1, 0, 1]),
+    (22, [1, 0, 1, 0, 0, 1]),
+    (23, [0, 0, 0, 0, 0, 1]),
+    (24, [1, 0, 0, 0, 0, 0]),
+    (25, [1, 0, 0, 1, 1, 1]),
+    (26, [1, 1, 1, 0, 0, 1]),
+    (27, [1, 0, 0, 0, 0, 1]),
+    (28, [0, 1, 1, 1, 1, 0]),
+    (29, [0, 1, 0, 0, 1, 0]),
+    (30, [1, 0, 1, 1, 0, 1]),
+    (31, [0, 0, 1, 1, 1, 0]),
+    (32, [0, 1, 1, 1, 0, 0]),
+    (33, [0, 0, 1, 1, 1, 1]),
+    (34, [1, 1, 1, 1, 0, 0]),
+    (35, [0, 0, 0, 1, 0, 1]),
+    (36, [1, 0, 1, 0, 0, 0]),
+    (37, [1, 0, 1, 0, 1, 1]),
+    (38, [1, 1, 0, 1, 0, 1]),
+    (39, [0, 0, 1, 0, 1, 0]),
+    (40, [0, 1, 0, 1, 0, 0]),
+    (41, [1, 1, 0, 0, 0, 1]),
+    (42, [1, 0, 0, 0, 1, 1]),
+    (43, [1, 1, 1, 1, 1, 0]),
+    (44, [0, 1, 1, 1, 1, 1]),
+    (45, [0, 0, 0, 1, 1, 0]),
+    (46, [0, 1, 1, 0, 0, 0]),
+    (47, [0, 1, 0, 1, 1, 0]),
+    (48, [0, 1, 1, 0, 1, 0]),
+    (49, [1, 0, 1, 1, 1, 0]),
+    (50, [0, 1, 1, 1, 0, 1]),
+    (51, [1, 0, 0, 1, 0, 0]),
+    (52, [0, 0, 1, 0, 0, 1]),
+    (53, [0, 0, 1, 0, 1, 1]),
+    (54, [1, 1, 0, 1, 0, 0]),
+    (55, [1, 0, 1, 1, 0, 0]),
+    (56, [0, 0, 1, 1, 0, 1]),
+    (57, [0, 1, 1, 0, 1, 1]),
+    (58, [1, 1, 0, 1, 1, 0]),
+    (59, [0, 1, 0, 0, 1, 1]),
+    (60, [1, 1, 0, 0, 1, 0]),
+    (61, [1, 1, 0, 0, 1, 1]),
+    (62, [0, 0, 1, 1, 0, 0]),
+    (63, [1, 0, 1, 0, 1, 0]),
+    (64, [0, 1, 0, 1, 0, 1]),
 ];
 
-fn hexagram_index() -> HashMap<[Line; 6], u8> {
+fn hexagram_index() -> HashMap<[Line; 6], Hexagram> {
     let mut index = HashMap::new();
-    for (i, hexagram) in HEXAGRAMS.iter().enumerate() {
-        index.insert(hexagram.lines, i as u8);
+    for (number, lines) in HEXAGRAMS.iter() {
+        let hex = create_hexagram(*number, *lines);
+        index.insert(hex.lines, hex);
     }
     index
 }
@@ -204,11 +203,13 @@ pub fn generate_reading(mode: Mode, question: &str) -> Result<Reading, Error> {
 
     let mut present_lines = [Line::Open; 6];
     let mut future_lines = [Line::Open; 6];
+    let mut changing_lines: HashSet<usize> = HashSet::new();
     for (i, throw) in throws.iter().enumerate() {
         match throw {
             6 => {
                 present_lines[i] = Line::Open;
                 future_lines[i] = Line::Closed;
+                changing_lines.insert(i);
             }
             7 => {
                 present_lines[i] = Line::Closed;
@@ -221,33 +222,28 @@ pub fn generate_reading(mode: Mode, question: &str) -> Result<Reading, Error> {
             9 => {
                 present_lines[i] = Line::Closed;
                 future_lines[i] = Line::Open;
+                changing_lines.insert(i);
             }
-            _ => return Err(Error::InvalidDrawing),
+            _ => return Err(Error::InvalidReading),
         }
     }
-    let present_number = *index.get(&present_lines).ok_or(Error::InvalidDrawing)?;
-    let future_number = *index.get(&future_lines).ok_or(Error::InvalidDrawing)?;
+
+    let present_hex = *index.get(&present_lines).ok_or(Error::InvalidReading)?;
+    let future_hex = *index.get(&future_lines).ok_or(Error::InvalidReading)?;
 
     if present_lines == future_lines {
         Ok(Reading {
             question: question.to_string(),
-            present: Hexagram {
-                number: present_number,
-                lines: present_lines,
-            },
+            present: present_hex,
             future: None,
+            changing_lines: changing_lines,
         })
     } else {
         Ok(Reading {
             question: question.to_string(),
-            present: Hexagram {
-                number: present_number,
-                lines: present_lines,
-            },
-            future: Some(Hexagram {
-                number: future_number,
-                lines: future_lines,
-            }),
+            present: present_hex,
+            future: Some(future_hex),
+            changing_lines: changing_lines,
         })
     }
 }

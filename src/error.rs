@@ -2,7 +2,7 @@
 pub enum Error {
     RequestError,
     ResponseError,
-    InvalidDrawing,
+    InvalidReading,
 }
 
 impl From<reqwest::Error> for Error {
