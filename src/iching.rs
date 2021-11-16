@@ -193,7 +193,7 @@ pub fn pseudorandom_reading() -> Vec<u8> {
     throws
 }
 
-pub fn create_reading(mode: Mode, question: &str) -> Result<Reading, Error> {
+pub fn generate_reading(mode: Mode, question: &str) -> Result<Reading, Error> {
     let index = hexagram_index();
 
     let throws = if mode == Mode::Random {

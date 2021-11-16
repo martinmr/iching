@@ -29,7 +29,7 @@ fn main() -> Result<(), error::Error> {
     let mode = iching::Mode::from(matches.value_of("mode").unwrap_or("random"));
     let question = matches.value_of("question").unwrap_or("");
 
-    let result = iching::create_reading(mode, question)?;
+    let result = iching::generate_reading(mode, question)?;
     result.print();
     Ok(())
 }
