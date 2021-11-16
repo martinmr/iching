@@ -23,8 +23,9 @@ pub struct Hexagram {
     pub lines: [Line; 6],
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reading {
+    question: String,
     present: Hexagram,
     future: Option<Hexagram>,
 }
@@ -35,11 +36,11 @@ pub enum Mode {
     Pseudorandom,
 }
 
-impl From<&String> for Mode {
-    fn from(val: &String) -> Self {
-        match val.as_str() {
-            "--random" => Mode::Random,
-            "--pseudorandom" => Mode::Pseudorandom,
+impl From<&str> for Mode {
+    fn from(val: &str) -> Self {
+        match val {
+            "random" => Mode::Random,
+            "pseudorandom" => Mode::Pseudorandom,
             _ => Mode::Random,
         }
     }
@@ -62,70 +63,70 @@ const fn create_hexagram(hexagram_num: u8, input_lines: [u8; 6]) -> Hexagram {
 }
 
 static HEXAGRAMS: [Hexagram; 64] = [
-    create_hexagram(1, [0, 0, 0, 0, 0, 0]),
+    create_hexagram(1, [1, 1, 1, 1, 1, 1]),
     create_hexagram(2, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(3, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(4, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(5, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(6, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(7, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(8, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(9, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(10, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(11, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(12, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(13, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(14, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(15, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(16, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(17, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(18, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(19, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(20, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(21, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(22, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(23, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(24, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(25, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(26, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(27, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(28, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(29, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(30, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(31, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(32, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(33, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(34, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(35, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(36, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(37, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(38, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(39, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(40, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(41, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(42, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(43, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(44, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(45, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(46, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(47, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(48, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(49, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(50, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(51, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(52, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(53, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(54, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(55, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(56, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(57, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(58, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(59, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(60, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(61, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(62, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(63, [0, 0, 0, 0, 0, 0]),
-    create_hexagram(64, [0, 0, 0, 0, 0, 0]),
+    create_hexagram(3, [1, 0, 0, 0, 1, 0]),
+    create_hexagram(4, [0, 1, 0, 0, 0, 1]),
+    create_hexagram(5, [1, 1, 1, 0, 1, 0]),
+    create_hexagram(6, [0, 1, 0, 1, 1, 1]),
+    create_hexagram(7, [0, 1, 0, 0, 0, 0]),
+    create_hexagram(8, [0, 0, 0, 0, 1, 0]),
+    create_hexagram(9, [1, 1, 1, 0, 1, 1]),
+    create_hexagram(10, [1, 1, 0, 1, 1, 1]),
+    create_hexagram(11, [1, 1, 1, 0, 0, 0]),
+    create_hexagram(12, [0, 0, 0, 1, 1, 1]),
+    create_hexagram(13, [1, 0, 1, 1, 1, 1]),
+    create_hexagram(14, [1, 1, 1, 1, 0, 1]),
+    create_hexagram(15, [0, 0, 1, 0, 0, 0]),
+    create_hexagram(16, [0, 0, 0, 1, 0, 0]),
+    create_hexagram(17, [1, 0, 0, 1, 1, 0]),
+    create_hexagram(18, [0, 1, 1, 0, 0, 1]),
+    create_hexagram(19, [1, 1, 0, 0, 0, 0]),
+    create_hexagram(20, [0, 0, 0, 0, 1, 1]),
+    create_hexagram(21, [1, 0, 0, 1, 0, 1]),
+    create_hexagram(22, [1, 0, 1, 0, 0, 1]),
+    create_hexagram(23, [0, 0, 0, 0, 0, 1]),
+    create_hexagram(24, [1, 0, 0, 0, 0, 0]),
+    create_hexagram(25, [1, 0, 0, 1, 1, 1]),
+    create_hexagram(26, [1, 1, 1, 0, 0, 1]),
+    create_hexagram(27, [1, 0, 0, 0, 0, 1]),
+    create_hexagram(28, [0, 1, 1, 1, 1, 0]),
+    create_hexagram(29, [0, 1, 0, 0, 1, 0]),
+    create_hexagram(30, [1, 0, 1, 1, 0, 1]),
+    create_hexagram(31, [0, 0, 1, 1, 1, 0]),
+    create_hexagram(32, [0, 1, 1, 1, 0, 0]),
+    create_hexagram(33, [0, 0, 1, 1, 1, 1]),
+    create_hexagram(34, [1, 1, 1, 1, 0, 0]),
+    create_hexagram(35, [0, 0, 0, 1, 0, 1]),
+    create_hexagram(36, [1, 0, 1, 0, 0, 0]),
+    create_hexagram(37, [1, 0, 1, 0, 1, 1]),
+    create_hexagram(38, [1, 1, 0, 1, 0, 1]),
+    create_hexagram(39, [0, 0, 1, 0, 1, 0]),
+    create_hexagram(40, [0, 1, 0, 1, 0, 0]),
+    create_hexagram(41, [1, 1, 0, 0, 0, 1]),
+    create_hexagram(42, [1, 0, 0, 0, 1, 1]),
+    create_hexagram(43, [1, 1, 1, 1, 1, 0]),
+    create_hexagram(44, [0, 1, 1, 1, 1, 1]),
+    create_hexagram(45, [0, 0, 0, 1, 1, 0]),
+    create_hexagram(46, [0, 1, 1, 0, 0, 0]),
+    create_hexagram(47, [0, 1, 0, 1, 1, 0]),
+    create_hexagram(48, [0, 1, 1, 0, 1, 0]),
+    create_hexagram(49, [1, 0, 1, 1, 1, 0]),
+    create_hexagram(50, [0, 1, 1, 1, 0, 1]),
+    create_hexagram(51, [1, 0, 0, 1, 0, 0]),
+    create_hexagram(52, [0, 0, 1, 0, 0, 1]),
+    create_hexagram(53, [0, 0, 1, 0, 1, 1]),
+    create_hexagram(54, [1, 1, 0, 1, 0, 0]),
+    create_hexagram(55, [1, 0, 1, 1, 0, 0]),
+    create_hexagram(56, [0, 0, 1, 1, 0, 1]),
+    create_hexagram(57, [0, 1, 1, 0, 1, 1]),
+    create_hexagram(58, [1, 1, 0, 1, 1, 0]),
+    create_hexagram(59, [0, 1, 0, 0, 1, 1]),
+    create_hexagram(60, [1, 1, 0, 0, 1, 0]),
+    create_hexagram(61, [1, 1, 0, 0, 1, 1]),
+    create_hexagram(62, [0, 0, 1, 1, 0, 0]),
+    create_hexagram(63, [1, 0, 1, 0, 1, 0]),
+    create_hexagram(64, [0, 1, 0, 1, 0, 1]),
 ];
 
 fn hexagram_index() -> HashMap<[Line; 6], u8> {
@@ -139,9 +140,11 @@ fn hexagram_index() -> HashMap<[Line; 6], u8> {
 pub fn random_reading() -> Result<Vec<u8>, Error> {
     let body = reqwest::blocking::get(
         "https://www.random.org/integers/?num=6&min=6&max=9&col=6&base=10&format=plain&rnd=new",
-    )?.text()?;
+    )?
+    .text()?;
 
     let throws = body
+        .trim()
         .split('\t')
         .map(|s| -> u8 { s.parse::<u8>().unwrap() })
         .collect::<Vec<u8>>();
@@ -160,7 +163,7 @@ pub fn pseudorandom_reading() -> Vec<u8> {
     throws
 }
 
-pub fn create_reading(mode: Mode) -> Result<Reading, Error> {
+pub fn create_reading(mode: Mode, question: &str) -> Result<Reading, Error> {
     let index = hexagram_index();
 
     let throws = if mode == Mode::Random {
@@ -199,6 +202,7 @@ pub fn create_reading(mode: Mode) -> Result<Reading, Error> {
 
     if present_lines == future_lines {
         Ok(Reading {
+            question: question.to_string(),
             present: Hexagram {
                 number: present_number,
                 lines: present_lines,
@@ -207,6 +211,7 @@ pub fn create_reading(mode: Mode) -> Result<Reading, Error> {
         })
     } else {
         Ok(Reading {
+            question: question.to_string(),
             present: Hexagram {
                 number: 0,
                 lines: present_lines,
