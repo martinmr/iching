@@ -23,11 +23,41 @@ pub struct Hexagram {
     pub lines: [Line; 6],
 }
 
+impl Hexagram {
+    pub fn print(&self) {
+        println!("     {}\n", self.number);
+        for line in self.lines.iter() {
+            match line {
+                Line::Open => println!("----    ----"),
+                Line::Closed => println!("------------"),
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reading {
     question: String,
     present: Hexagram,
     future: Option<Hexagram>,
+}
+
+impl Reading {
+    pub fn print(&self) {
+        if self.question.len() > 0 {
+            println!("Question: {}", self.question);
+        }
+        println!("\nPresent Hexagram\n");
+        self.present.print();
+
+        match self.future {
+            Some(hex) => {
+                println!("\nFuture Hexagram\n");
+                hex.print();
+            }
+            None => (),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -213,7 +243,7 @@ pub fn create_reading(mode: Mode, question: &str) -> Result<Reading, Error> {
         Ok(Reading {
             question: question.to_string(),
             present: Hexagram {
-                number: 0,
+                number: present_number,
                 lines: present_lines,
             },
             future: Some(Hexagram {

@@ -30,5 +30,6 @@ fn main() -> Result<(), error::Error> {
     let question = matches.value_of("question").unwrap_or("");
 
     let result = iching::create_reading(mode, question)?;
+    result.print();
     Ok(())
 }
