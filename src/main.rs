@@ -1,8 +1,6 @@
 mod error;
 mod iching;
 
-extern crate clap;
-
 use clap::{App, Arg};
 
 fn main() -> Result<(), error::Error> {
