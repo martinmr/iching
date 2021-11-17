@@ -37,6 +37,8 @@ impl Hexagram {
             }
             println!("")
         }
+
+        println!("\nLink: https://www.yijing.nl/hex/hex_{:02}.html", self.number);
     }
 }
 
