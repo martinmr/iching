@@ -6,7 +6,7 @@ use clap::{App, Arg};
 fn main() -> Result<(), error::Error> {
     let matches = App::new("I Ching")
         .version("0.1.0")
-        .about("CLI program to generate an I Ching reading based on a random drawing")
+        .about("CLI program to generate an I Ching reading based on data from random.org")
         .arg(
             Arg::with_name("mode")
                 .long("mode")
@@ -18,7 +18,7 @@ fn main() -> Result<(), error::Error> {
         .arg(
             Arg::with_name("question")
                 .long("question")
-                .help("The question to ask to the I Ching")
+                .help("The question to ask to the I Ching (optional)")
                 .default_value("")
                 .required(false)
         )

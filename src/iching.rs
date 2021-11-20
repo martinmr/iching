@@ -37,8 +37,6 @@ impl Hexagram {
             }
             println!("")
         }
-
-        println!("\nLink: https://www.yijing.nl/hex/hex_{:02}.html", self.number);
     }
 }
 
@@ -169,20 +167,16 @@ fn hexagram_index() -> HashMap<[Line; 6], Hexagram> {
 }
 
 static READING_URL: &str =
-    "https://www.random.org/integers/?num=6&min=6&max=9&col=6&base=10&format=plain&rnd=new";
+    "https://www.random.org/integers/?num=1&min=6&max=9&col=6&base=10&format=plain&rnd=new";
+
+pub fn random_draw() -> Result<u8, Error> {
+    let body = reqwest::blocking::get(READING_URL)?.text()?;
+    let draw: u8 = body.trim().parse()?;
+    Ok(draw)
+}
 
 pub fn random_reading() -> Result<Vec<u8>, Error> {
-    let body = reqwest::blocking::get(READING_URL)?.text()?;
-
-    let throws: Vec<u8> = body
-        .trim()
-        .split('\t')
-        .map(|s| -> u8 { s.parse::<u8>().unwrap() })
-        .collect();
-    if throws.len() != 6 {
-        return Err(Error::ResponseError);
-    }
-    Ok(throws)
+    vec![0; 6].iter().map(|_| random_draw()).collect()
 }
 
 pub fn pseudorandom_reading() -> Vec<u8> {

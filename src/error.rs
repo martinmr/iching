@@ -1,3 +1,5 @@
+use std::num::ParseIntError;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     RequestError,
@@ -10,3 +12,10 @@ impl From<reqwest::Error> for Error {
         Error::RequestError
     }
 }
+
+impl From<ParseIntError> for Error {
+    fn from(_: ParseIntError) -> Self {
+        Error::ResponseError
+    }
+}
+
