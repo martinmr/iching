@@ -26,7 +26,7 @@ pub struct Hexagram {
 impl Hexagram {
     pub fn print(&self, changing_lines: Option<&HashSet<usize>>) {
         println!("     {}\n", self.number);
-        for (i, line) in self.lines.iter().enumerate() {
+        for (i, line) in self.lines.iter().enumerate().rev() {
             match line {
                 Line::Open => print!("----    ----"),
                 Line::Closed => print!("------------"),
