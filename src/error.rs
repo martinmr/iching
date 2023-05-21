@@ -18,4 +18,3 @@ impl From<ParseIntError> for Error {
         Error::ResponseError
     }
 }
-
