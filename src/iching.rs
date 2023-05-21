@@ -31,7 +31,8 @@ pub struct Hexagram {
     /// The number of the hexagram, from 1 to 64.
     pub number: u8,
 
-    /// The lines of the hexagram.
+    /// The lines of the hexagram. The first line is the bottom line, and the last line is the top
+    /// one.
     pub lines: [Line; 6],
 }
 
@@ -44,7 +45,7 @@ impl Hexagram {
                 Line::Closed => print!("------------"),
             }
 
-            if changing_lines != None && changing_lines.unwrap().contains(&i) {
+            if changing_lines.map_or(false, |m| m.contains(&i)) {
                 print!("  *")
             }
             println!("")
