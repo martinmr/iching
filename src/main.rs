@@ -1,33 +1,29 @@
 mod error;
 mod iching;
 
-use clap::{App, Arg};
+use crate::iching::{RandomnessMode, ReadingMethod};
+use clap::Parser;
+
+/// Arguments for the CLI.
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// The method used to generate the reading.
+    #[arg(long, default_value_t = ReadingMethod::YarrowStalks)]
+    method: ReadingMethod,
+
+    /// Whether to use random.org or a pseudorandom number generator to generate the reading.
+    #[arg(long, default_value_t = RandomnessMode::Random)]
+    randomness: RandomnessMode,
+
+    /// The optional question to ask the I Ching.
+    #[arg(short, long, default_value = "")]
+    question: String,
+}
 
 fn main() -> Result<(), error::Error> {
-    let matches = App::new("I Ching")
-        .version("0.1.0")
-        .about("CLI program to generate an I Ching reading based on data from random.org")
-        .arg(
-            Arg::with_name("mode")
-                .long("mode")
-                .value_name("MODE")
-                .default_value("random")
-                .help("Mode used to generate the reading. Takes a value of either 'random' or 'pseudorandom'")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("question")
-                .long("question")
-                .help("The question to ask to the I Ching (optional)")
-                .default_value("")
-                .required(false)
-        )
-        .get_matches();
-
-    let mode = iching::Mode::from(matches.value_of("mode").unwrap_or("random"));
-    let question = matches.value_of("question").unwrap_or("");
-
-    let result = iching::generate_reading(mode, question)?;
+    let args = Args::parse();
+    let result = iching::generate_reading(args.method, args.randomness, &args.question)?;
     result.print();
     Ok(())
 }
