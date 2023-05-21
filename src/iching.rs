@@ -48,7 +48,7 @@ impl Hexagram {
             if changing_lines.map_or(false, |m| m.contains(&i)) {
                 print!("  *")
             }
-            println!("")
+            println!()
         }
     }
 }
@@ -123,11 +123,8 @@ static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
 
 /// Creates a hexagram from a number and a list of lines.
 fn create_hexagram(number: u8, input_lines: [u8; 6]) -> Hexagram {
-    let lines = input_lines.map(|l| Line::from(l));
-    Hexagram {
-        number: number,
-        lines: lines,
-    }
+    let lines = input_lines.map(Line::from);
+    Hexagram { number, lines }
 }
 
 /// Generate a map of lines to hexagrams for fast lookup.
@@ -159,7 +156,7 @@ pub struct Reading {
 impl Reading {
     /// Prints the reading to stdout.
     pub fn print(&self) {
-        if self.question.len() > 0 {
+        if !self.question.is_empty() {
             println!("Question: {}", self.question);
         }
         println!("\nPresent Hexagram\n");
@@ -378,14 +375,14 @@ pub(crate) fn generate_reading(
             question: question.to_string(),
             present: present_hex,
             future: None,
-            changing_lines: changing_lines,
+            changing_lines,
         })
     } else {
         Ok(Reading {
             question: question.to_string(),
             present: present_hex,
             future: Some(future_hex),
-            changing_lines: changing_lines,
+            changing_lines,
         })
     }
 }
