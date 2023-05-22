@@ -1,4 +1,4 @@
-use crate::error::Error;
+use anyhow::{anyhow, bail, Result};
 use clap::ValueEnum;
 use rand::Rng;
 use std::{
@@ -219,7 +219,7 @@ static COIN_READING_URL: &str =
     "https://www.random.org/integers/?num=1&min=6&max=9&col=1&base=10&format=plain&rnd=new";
 
 /// Generates a random number using random.org for use in the coin method.
-fn random_coin_draw() -> Result<u8, Error> {
+fn random_coin_draw() -> Result<u8> {
     let body = reqwest::blocking::get(COIN_READING_URL)?.text()?;
     let draw: u8 = body.trim().parse()?;
     Ok(draw)
@@ -232,7 +232,7 @@ fn pseudo_random_coin_draw() -> u8 {
 }
 
 /// Generates a reading using numbers from random.org and the coin method.
-fn coin_reading(randomness: RandomnessMode) -> Result<Vec<u8>, Error> {
+fn coin_reading(randomness: RandomnessMode) -> Result<Vec<u8>> {
     match randomness {
         RandomnessMode::Random => vec![0; 6].iter().map(|_| random_coin_draw()).collect(),
         RandomnessMode::Pseudorandom => Ok(vec![0; 6]
@@ -244,7 +244,7 @@ fn coin_reading(randomness: RandomnessMode) -> Result<Vec<u8>, Error> {
 
 /// Generates a random number using random.org for use in the yarrow stalks method. The number
 /// represents the number of stalks on the right pile after the split.
-fn random_yarrow_stalks_split(num_stalks: u8) -> Result<u8, Error> {
+fn random_yarrow_stalks_split(num_stalks: u8) -> Result<u8> {
     // The max number to draw should be the number of stalks minus 2 so that the left pile always
     // has at least two stalks, since one will be removed from it.
     let url = format!(
@@ -258,7 +258,7 @@ fn random_yarrow_stalks_split(num_stalks: u8) -> Result<u8, Error> {
 
 /// Generates a random number using the system's random number generator for use in the yarrow
 /// stalks method. The number represents the number of stalks on the right pile after the split.
-fn pseudo_random_yarrow_stalks_split(num_stalks: u8) -> Result<u8, Error> {
+fn pseudo_random_yarrow_stalks_split(num_stalks: u8) -> Result<u8> {
     // The max number to draw should be the number of stalks minus 2 so that the left pile always
     // has at least two stalks, since one will be removed from it.
     let mut rng = rand::thread_rng();
@@ -278,7 +278,7 @@ fn pile_reminder(pile_size: u8) -> u8 {
 /// Splits the yarrow stalks into two piles, sets one stalk aside, and counts the remainder from the
 /// two piles. This procedure is repeated three times to generate a line from the reading. Returns
 /// the remaining stalks and the number of groups of four stalks that were counted.
-fn yarrow_stalk_split(num_stalks: u8, randomness: RandomnessMode) -> Result<(u8, u8), Error> {
+fn yarrow_stalk_split(num_stalks: u8, randomness: RandomnessMode) -> Result<(u8, u8)> {
     // Split the stalks into two piles.
     let right = match randomness {
         RandomnessMode::Random => random_yarrow_stalks_split(num_stalks)?,
@@ -303,7 +303,7 @@ fn yarrow_stalk_split(num_stalks: u8, randomness: RandomnessMode) -> Result<(u8,
 }
 
 /// Generates a line for a reading using the yarrow stalks method.
-fn yarrow_stalk_line(randomness: RandomnessMode) -> Result<u8, Error> {
+fn yarrow_stalk_line(randomness: RandomnessMode) -> Result<u8> {
     // Start with 49 stalks.
     let num_stalks = 49;
 
@@ -317,7 +317,7 @@ fn yarrow_stalk_line(randomness: RandomnessMode) -> Result<u8, Error> {
 }
 
 /// Generates a reading using numbers from random.org and the yarrow stalks method.
-fn yarrow_stalk_reading(randomness: RandomnessMode) -> Result<Vec<u8>, Error> {
+fn yarrow_stalk_reading(randomness: RandomnessMode) -> Result<Vec<u8>> {
     vec![0; 6]
         .iter()
         .map(|_| yarrow_stalk_line(randomness))
@@ -329,7 +329,7 @@ pub(crate) fn generate_reading(
     method: ReadingMethod,
     randomness: RandomnessMode,
     question: &str,
-) -> Result<Reading, Error> {
+) -> Result<Reading> {
     // Create the hexagram index.
     let index = hexagram_index();
 
@@ -363,13 +363,19 @@ pub(crate) fn generate_reading(
                 future_lines[i] = Line::Open;
                 changing_lines.insert(i);
             }
-            _ => return Err(Error::InvalidReading),
+            _ => bail!("bad throw: {}", throw),
         }
     }
 
     // Build the present and future hexagrams.
-    let present_hex = *index.get(&present_lines).ok_or(Error::InvalidReading)?;
-    let future_hex = *index.get(&future_lines).ok_or(Error::InvalidReading)?;
+    let present_hex = *index.get(&present_lines).ok_or(anyhow!(
+        "cannot find hexagram for present lines: {:?}",
+        present_lines
+    ))?;
+    let future_hex = *index.get(&future_lines).ok_or(anyhow!(
+        "cannot find hexagram for future lines: {:?}",
+        future_lines
+    ))?;
     if present_lines == future_lines {
         Ok(Reading {
             question: question.to_string(),
@@ -386,3 +392,6 @@ pub(crate) fn generate_reading(
         })
     }
 }
+
+#[cfg(test)]
+mod test {}

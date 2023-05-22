@@ -1,8 +1,9 @@
-mod error;
 mod iching;
 
-use crate::iching::{RandomnessMode, ReadingMethod};
+use anyhow::Result;
 use clap::Parser;
+
+use crate::iching::{RandomnessMode, ReadingMethod};
 
 /// Arguments for the CLI.
 #[derive(Parser, Debug)]
@@ -21,7 +22,7 @@ struct Args {
     question: String,
 }
 
-fn main() -> Result<(), error::Error> {
+fn main() -> Result<()> {
     let args = Args::parse();
     let result = iching::generate_reading(args.method, args.randomness, &args.question)?;
     result.print();
