@@ -216,30 +216,42 @@ impl Display for RandomnessMode {
 
 /// The URL to use for the coin method.
 static COIN_READING_URL: &str =
-    "https://www.random.org/integers/?num=1&min=6&max=9&col=1&base=10&format=plain&rnd=new";
+    "https://www.random.org/integers/?num=1&min=2&max=3&col=1&base=10&format=plain&rnd=new";
 
-/// Generates a random number using random.org for use in the coin method.
-fn random_coin_draw() -> Result<u8> {
+/// Generates a random coin throw using random.org.
+fn random_coin_throw() -> Result<u8> {
     let body = reqwest::blocking::get(COIN_READING_URL)?.text()?;
     let draw: u8 = body.trim().parse()?;
     Ok(draw)
 }
 
-/// Generates a random number using the system's random number generator for use in the coin method.
-fn pseudo_random_coin_draw() -> u8 {
+/// Generates a pseudo-random coin throw using the system's random number generator.
+fn pseudo_random_coin_throw() -> u8 {
     let mut rng = rand::thread_rng();
-    rng.gen_range(6..10)
+    rng.gen_range(2..4)
 }
 
-/// Generates a reading using numbers from random.org and the coin method.
-fn coin_reading(randomness: RandomnessMode) -> Result<Vec<u8>> {
+/// Generates a coin throw based on the given randomness mode.
+fn coin_draw(randomness: RandomnessMode) -> Result<u8> {
     match randomness {
-        RandomnessMode::Random => vec![0; 6].iter().map(|_| random_coin_draw()).collect(),
-        RandomnessMode::Pseudorandom => Ok(vec![0; 6]
-            .iter()
-            .map(|_| pseudo_random_coin_draw())
-            .collect()),
+        RandomnessMode::Random => random_coin_throw(),
+        RandomnessMode::Pseudorandom => Ok(pseudo_random_coin_throw()),
     }
+}
+
+/// Generates a line using the given randomness mode.
+fn coin_line(randomness: RandomnessMode) -> Result<u8> {
+    // Throw the coin three times. One side of the coin is assigned a value of 2 and the other a
+    // value of 3. The sum of the three throws is the value of the line, ranging from 6 to 9.
+    let throw1 = coin_draw(randomness)?;
+    let throw2 = coin_draw(randomness)?;
+    let throw3 = coin_draw(randomness)?;
+    Ok(throw1 + throw2 + throw3)
+}
+
+/// Generates a reading using the given randomness mode.
+fn coin_reading(randomness: RandomnessMode) -> Result<Vec<u8>> {
+    vec![0; 6].iter().map(|_| coin_line(randomness)).collect()
 }
 
 /// Generates a random number using random.org for use in the yarrow stalks method. The number
@@ -394,4 +406,107 @@ pub(crate) fn generate_reading(
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use anyhow::Result;
+
+    use super::*;
+
+    /// A trait used to test an arbitrary method to generate an I Ching reading.
+    trait ReadingGenerator {
+        fn generate_reading(&self) -> Result<Vec<u8>>;
+    }
+
+    /// A reading method using the coin method with true randomness.
+    struct CoinRandom {}
+    impl ReadingGenerator for CoinRandom {
+        fn generate_reading(&self) -> Result<Vec<u8>> {
+            coin_reading(RandomnessMode::Random)
+        }
+    }
+
+    /// A reading method using the coin method with pseudorandomness.
+    struct CoinPseudorandom {}
+    impl ReadingGenerator for CoinPseudorandom {
+        fn generate_reading(&self) -> Result<Vec<u8>> {
+            coin_reading(RandomnessMode::Pseudorandom)
+        }
+    }
+
+    /// A reading method using the yarrow stalks method with true randomness.
+    struct YarrowStalksRandom {}
+    impl ReadingGenerator for YarrowStalksRandom {
+        fn generate_reading(&self) -> Result<Vec<u8>> {
+            yarrow_stalk_reading(RandomnessMode::Random)
+        }
+    }
+
+    /// A reading method using the yarrow stalks method with pseudorandomness.
+    struct YarrowStalksPseudorandom {}
+    impl ReadingGenerator for YarrowStalksPseudorandom {
+        fn generate_reading(&self) -> Result<Vec<u8>> {
+            yarrow_stalk_reading(RandomnessMode::Pseudorandom)
+        }
+    }
+
+    /// Verifies that the reading method generates a valid reading.
+    struct ReadingVerifier {
+        reading_method: Box<dyn ReadingGenerator>,
+        num_readings: usize,
+    }
+
+    impl ReadingVerifier {
+        /// Generates the given number of readings and verifies that all of them are valid.
+        fn verify_reading(&self) -> Result<()> {
+            for _ in 0..self.num_readings {
+                let reading = self.reading_method.generate_reading()?;
+                if reading.len() != 6 {
+                    bail!("reading has wrong number of lines: {}", reading.len());
+                }
+                if reading.iter().any(|&x| x < 6 || x > 9) {
+                    bail!("reading has invalid throw: {:?}", reading);
+                }
+            }
+            Ok(())
+        }
+    }
+
+    /// Verifies the coin method with true randomness.
+    #[test]
+    fn test_coin_random() -> Result<()> {
+        ReadingVerifier {
+            reading_method: Box::new(CoinRandom {}),
+            num_readings: 5,
+        }
+        .verify_reading()
+    }
+
+    /// Verifies the coin method with pseudorandomness.
+    #[test]
+    fn test_coin_pseudorandom() -> Result<()> {
+        ReadingVerifier {
+            reading_method: Box::new(CoinPseudorandom {}),
+            num_readings: 100,
+        }
+        .verify_reading()
+    }
+
+    /// Verifies the yarrow stalks method with true randomness.
+    #[test]
+    fn test_yarrow_stalks_random() -> Result<()> {
+        ReadingVerifier {
+            reading_method: Box::new(YarrowStalksRandom {}),
+            num_readings: 5,
+        }
+        .verify_reading()
+    }
+
+    /// Verifies the yarrow stalks method with pseudorandomness.
+    #[test]
+    fn test_yarrow_stalks_pseudorandom() -> Result<()> {
+        ReadingVerifier {
+            reading_method: Box::new(YarrowStalksPseudorandom {}),
+            num_readings: 100,
+        }
+        .verify_reading()
+    }
+}
