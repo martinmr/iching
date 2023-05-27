@@ -10,11 +10,11 @@ use crate::iching::{RandomnessMode, ReadingMethod};
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// The method used to generate the reading.
-    #[arg(long, default_value_t = ReadingMethod::YarrowStalks)]
+    #[arg(short, long, default_value_t = ReadingMethod::YarrowStalks)]
     method: ReadingMethod,
 
     /// Whether to use random.org or a pseudorandom number generator to generate the reading.
-    #[arg(long, default_value_t = RandomnessMode::Random)]
+    #[arg(short, long, default_value_t = RandomnessMode::Random)]
     randomness: RandomnessMode,
 
     /// The optional question to ask the I Ching.
