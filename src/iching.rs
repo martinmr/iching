@@ -17,11 +17,39 @@ pub enum Line {
     Closed,
 }
 
+impl Line {
+    /// Inverses the line to the opposite value.
+    pub fn inverse(&self) -> Line {
+        match self {
+            Line::Open => Line::Closed,
+            Line::Closed => Line::Open,
+        }
+    }
+}
+
 impl From<u8> for Line {
     fn from(n: u8) -> Self {
         match n {
             0 => Line::Open,
             _ => Line::Closed,
+        }
+    }
+}
+
+/// The possition of a line in a trigram.
+pub enum TrigramLine {
+    First,
+    Second,
+    Third,
+}
+
+impl TrigramLine {
+    /// Converts a line into an array index.
+    fn line_to_index(&self) -> usize {
+        match self {
+            TrigramLine::First => 0,
+            TrigramLine::Second => 1,
+            TrigramLine::Third => 2,
         }
     }
 }
@@ -35,6 +63,54 @@ pub struct Trigram {
     /// The lines of the hexagram. The first line is the bottom line, and the last line is the top
     /// one.
     pub lines: [Line; 3],
+}
+
+impl Trigram {
+    /// Prints the trigram to the console.
+    pub fn print(&self) {
+        println!("     {}\n", self.number);
+        for line in self.lines.iter().rev() {
+            match line {
+                Line::Open => print!("----    ----"),
+                Line::Closed => print!("------------"),
+            }
+            println!()
+        }
+    }
+
+    /// Returns the trigram obtained by reversing the order of the lines in this trigram.
+    pub fn reverse(&self) -> Trigram {
+        let lines = [self.lines[2], self.lines[1], self.lines[0]];
+        return TRIGRAM_INDEX
+            .get(&lines)
+            .map(|trigram| trigram.clone())
+            .unwrap();
+    }
+
+    /// Returns the trigram obtained by flipping the lines in this trigram.
+    pub fn inverse(&self) -> Trigram {
+        let lines = [
+            self.lines[0].inverse(),
+            self.lines[1].inverse(),
+            self.lines[2].inverse(),
+        ];
+
+        return TRIGRAM_INDEX
+            .get(&lines)
+            .map(|trigram| trigram.clone())
+            .unwrap();
+    }
+
+    /// Returns the trigram obtained by inversing the given line.
+    pub fn inverse_line(&self, line: TrigramLine) -> Trigram {
+        let mut lines = self.lines.clone();
+        lines[line.line_to_index()] = lines[line.line_to_index()].inverse();
+
+        return TRIGRAM_INDEX
+            .get(&lines)
+            .map(|trigram| trigram.clone())
+            .unwrap();
+    }
 }
 
 /// The list of all I Ching trigams.
@@ -72,6 +148,30 @@ lazy_static! {
     static ref TRIGRAM_INDEX: HashMap<[Line; 3], Trigram> = trigram_index();
 }
 
+/// The possition of a line in a hexagram.
+pub enum HexagramLine {
+    First,
+    Second,
+    Third,
+    Fourth,
+    Fifth,
+    Sixth,
+}
+
+impl HexagramLine {
+    /// Converts a line into an array index.
+    fn line_to_index(&self) -> usize {
+        match self {
+            HexagramLine::First => 0,
+            HexagramLine::Second => 1,
+            HexagramLine::Third => 2,
+            HexagramLine::Fourth => 3,
+            HexagramLine::Fifth => 4,
+            HexagramLine::Sixth => 5,
+        }
+    }
+}
+
 /// A single hexagram in a reading, consisting of six lines.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Hexagram {
@@ -84,6 +184,7 @@ pub struct Hexagram {
 }
 
 impl Hexagram {
+    /// Prints the hexagram to the console.
     pub fn print(&self, changing_lines: Option<&HashSet<usize>>) {
         println!("     {}\n", self.number);
         for (i, line) in self.lines.iter().enumerate().rev() {
@@ -99,6 +200,7 @@ impl Hexagram {
         }
     }
 
+    /// Returns the bottom and top trigrams of the hexagram.
     pub fn trigrams(&self) -> (Trigram, Trigram) {
         let lines = [self.lines[0], self.lines[1], self.lines[2]];
         let number = TRIGRAM_INDEX
@@ -115,6 +217,153 @@ impl Hexagram {
         let top = Trigram { number, lines };
 
         (bottom, top)
+    }
+
+    /// Returns the hexagram obtained by reversing the order of the lines in this hexagram.
+    pub fn reverse_lines(&self) -> Hexagram {
+        let lines = [
+            self.lines[5],
+            self.lines[4],
+            self.lines[3],
+            self.lines[2],
+            self.lines[1],
+            self.lines[0],
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by inversing all lines in this hexagram.
+    pub fn inverse(&self) -> Hexagram {
+        let lines = [
+            self.lines[0].inverse(),
+            self.lines[1].inverse(),
+            self.lines[2].inverse(),
+            self.lines[3].inverse(),
+            self.lines[4].inverse(),
+            self.lines[5].inverse(),
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by inversing the bottom trigram of this hexagram.
+    pub fn inverse_bottom_trigram(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            bottom.lines[0].inverse(),
+            bottom.lines[1].inverse(),
+            bottom.lines[2].inverse(),
+            top.lines[0],
+            top.lines[1],
+            top.lines[2],
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by inversing the top trigram of this hexagram.
+    pub fn inverse_top_trigram(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            bottom.lines[0],
+            bottom.lines[1],
+            bottom.lines[2],
+            top.lines[0].inverse(),
+            top.lines[1].inverse(),
+            top.lines[2].inverse(),
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by inversing the given line. The line number is zero-based,
+    /// with zero being the bottom line.
+    pub fn inverse_line(&self, line: HexagramLine) -> Hexagram {
+        let mut lines = self.lines.clone();
+        let index = line.line_to_index();
+        lines[index] = lines[index].inverse();
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by reversing the trigrams of this hexagram.
+    pub fn reverse_trigrams(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            top.lines[2],
+            top.lines[1],
+            top.lines[0],
+            bottom.lines[2],
+            bottom.lines[1],
+            bottom.lines[0],
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by reversing the bottom trigram of this hexagram.
+    pub fn reverse_bottom_trigram(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            bottom.lines[2],
+            bottom.lines[1],
+            bottom.lines[0],
+            top.lines[0],
+            top.lines[1],
+            top.lines[2],
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by reversing the top trigram of this hexagram.
+    pub fn reverse_top_trigram(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            bottom.lines[0],
+            bottom.lines[1],
+            bottom.lines[2],
+            top.lines[2],
+            top.lines[1],
+            top.lines[0],
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by mirroring the trigrams of this hexagram along the dividing
+    /// line between the two trigrams.
+    pub fn mirror_trigrams(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            bottom.lines[2],
+            bottom.lines[1],
+            bottom.lines[0],
+            top.lines[2],
+            top.lines[1],
+            top.lines[0],
+        ];
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
     }
 }
 
@@ -223,7 +472,7 @@ pub struct Reading {
 }
 
 impl Reading {
-    /// Prints the reading to stdout.
+    /// Prints the reading to the console.
     pub fn print(&self) {
         if !self.question.is_empty() {
             println!("Question: {}", self.question);
