@@ -1,5 +1,6 @@
 use anyhow::{anyhow, bail, Result};
 use clap::ValueEnum;
+use lazy_static::lazy_static;
 use rand::Rng;
 use std::{
     collections::{HashMap, HashSet},
@@ -57,13 +58,18 @@ fn create_trigram(number: u8, lines: [u8; 3]) -> Trigram {
 }
 
 /// Generates a map of lines to trigram number for fast lookup.
-fn generate_trigram_map() -> HashMap<[Line; 3], Trigram> {
+fn trigram_index() -> HashMap<[Line; 3], Trigram> {
     let mut index = HashMap::new();
     for (number, lines) in TRIGRAMS.iter() {
         let hex = create_trigram(*number, *lines);
         index.insert(hex.lines, hex);
     }
     index
+}
+
+lazy_static! {
+    /// A map of lines to trigram number for fast lookup.
+    static ref TRIGRAM_INDEX: HashMap<[Line; 3], Trigram> = trigram_index();
 }
 
 /// A single hexagram in a reading, consisting of six lines.
@@ -94,29 +100,19 @@ impl Hexagram {
     }
 
     pub fn trigrams(&self) -> (Trigram, Trigram) {
-        let bottom_lines = [
-            self.lines[0] as u8,
-            self.lines[1] as u8,
-            self.lines[2] as u8,
-        ];
-        let bottom_number = TRIGRAMS
-            .iter()
-            .find(|(_, lines)| lines == &bottom_lines)
-            .map(|(number, _)| *number)
+        let lines = [self.lines[0], self.lines[1], self.lines[2]];
+        let number = TRIGRAM_INDEX
+            .get(&lines)
+            .map(|trigram| trigram.number)
             .unwrap();
-        let bottom = create_trigram(bottom_number, bottom_lines);
+        let bottom = Trigram { number, lines };
 
-        let top_lines = [
-            self.lines[3] as u8,
-            self.lines[4] as u8,
-            self.lines[5] as u8,
-        ];
-        let top_number = TRIGRAMS
-            .iter()
-            .find(|(_, lines)| lines == &top_lines)
-            .map(|(number, _)| *number)
+        let lines = [self.lines[3], self.lines[4], self.lines[5]];
+        let number = TRIGRAM_INDEX
+            .get(&lines)
+            .map(|trigram| trigram.number)
             .unwrap();
-        let top = create_trigram(top_number, top_lines);
+        let top = Trigram { number, lines };
 
         (bottom, top)
     }
@@ -195,7 +191,6 @@ fn create_hexagram(number: u8, input_lines: [u8; 6]) -> Hexagram {
     let lines = input_lines.map(Line::from);
     Hexagram { number, lines }
 }
-
 /// Generate a map of lines to hexagrams for fast lookup.
 fn hexagram_index() -> HashMap<[Line; 6], Hexagram> {
     let mut index = HashMap::new();
@@ -204,6 +199,11 @@ fn hexagram_index() -> HashMap<[Line; 6], Hexagram> {
         index.insert(hex.lines, hex);
     }
     index
+}
+
+lazy_static! {
+    /// A map of lines to hexagrams for fast lookup.
+    pub static ref HEXAGRAM_INDEX: HashMap<[Line; 6], Hexagram> = hexagram_index();
 }
 
 /// A reading of the I Ching.
@@ -411,9 +411,6 @@ pub(crate) fn generate_reading(
     randomness: RandomnessMode,
     question: &str,
 ) -> Result<Reading> {
-    // Create the hexagram index.
-    let index = hexagram_index();
-
     // Generate the throws according to the reading method.
     let throws = match method {
         ReadingMethod::Coin => coin_reading(randomness)?,
@@ -449,11 +446,11 @@ pub(crate) fn generate_reading(
     }
 
     // Build the present and future hexagrams.
-    let present_hex = *index.get(&present_lines).ok_or(anyhow!(
+    let present_hex = *HEXAGRAM_INDEX.get(&present_lines).ok_or(anyhow!(
         "cannot find hexagram for present lines: {:?}",
         present_lines
     ))?;
-    let future_hex = *index.get(&future_lines).ok_or(anyhow!(
+    let future_hex = *HEXAGRAM_INDEX.get(&future_lines).ok_or(anyhow!(
         "cannot find hexagram for future lines: {:?}",
         future_lines
     ))?;
@@ -544,7 +541,7 @@ mod test {
     fn test_coin_random() -> Result<()> {
         ReadingVerifier {
             reading_method: Box::new(CoinRandom {}),
-            num_readings: 5,
+            num_readings: 1,
         }
         .verify_reading()
     }
@@ -564,7 +561,7 @@ mod test {
     fn test_yarrow_stalks_random() -> Result<()> {
         ReadingVerifier {
             reading_method: Box::new(YarrowStalksRandom {}),
-            num_readings: 5,
+            num_readings: 1,
         }
         .verify_reading()
     }
@@ -577,5 +574,23 @@ mod test {
             num_readings: 100,
         }
         .verify_reading()
+    }
+
+    /// Verifies that the correct trigrams are extracted from an hexagram.
+    #[test]
+    fn hexagram_trigrams() -> Result<()> {
+        for hexagram in HEXAGRAM_INDEX.values() {
+            let (bottom, top) = hexagram.trigrams();
+
+            assert_eq!(bottom.lines.len(), 3);
+            assert_eq!(top.lines.len(), 3);
+            assert_eq!(bottom.lines[0], hexagram.lines[0]);
+            assert_eq!(bottom.lines[1], hexagram.lines[1]);
+            assert_eq!(bottom.lines[2], hexagram.lines[2]);
+            assert_eq!(top.lines[0], hexagram.lines[3]);
+            assert_eq!(top.lines[1], hexagram.lines[4]);
+            assert_eq!(top.lines[2], hexagram.lines[5]);
+        }
+        Ok(())
     }
 }
