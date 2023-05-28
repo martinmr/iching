@@ -25,6 +25,47 @@ impl From<u8> for Line {
     }
 }
 
+/// A single trigram, consisting of three lines.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Trigram {
+    /// The number of the trigram, from 1 to 8.
+    pub number: u8,
+
+    /// The lines of the hexagram. The first line is the bottom line, and the last line is the top
+    /// one.
+    pub lines: [Line; 3],
+}
+
+/// The list of all I Ching trigams.
+static TRIGRAMS: [(u8, [u8; 3]); 8] = [
+    (1, [1, 1, 1]),
+    (2, [1, 0, 0]),
+    (3, [0, 1, 0]),
+    (4, [0, 0, 1]),
+    (5, [0, 0, 0]),
+    (6, [0, 1, 1]),
+    (7, [1, 0, 1]),
+    (8, [1, 1, 0]),
+];
+
+/// Creates a trigram from a number and a list of lines.
+fn create_trigram(number: u8, lines: [u8; 3]) -> Trigram {
+    Trigram {
+        number,
+        lines: [lines[0].into(), lines[1].into(), lines[2].into()],
+    }
+}
+
+/// Generates a map of lines to trigram number for fast lookup.
+fn generate_trigram_map() -> HashMap<[Line; 3], Trigram> {
+    let mut index = HashMap::new();
+    for (number, lines) in TRIGRAMS.iter() {
+        let hex = create_trigram(*number, *lines);
+        index.insert(hex.lines, hex);
+    }
+    index
+}
+
 /// A single hexagram in a reading, consisting of six lines.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Hexagram {
@@ -50,6 +91,34 @@ impl Hexagram {
             }
             println!()
         }
+    }
+
+    pub fn trigrams(&self) -> (Trigram, Trigram) {
+        let bottom_lines = [
+            self.lines[0] as u8,
+            self.lines[1] as u8,
+            self.lines[2] as u8,
+        ];
+        let bottom_number = TRIGRAMS
+            .iter()
+            .find(|(_, lines)| lines == &bottom_lines)
+            .map(|(number, _)| *number)
+            .unwrap();
+        let bottom = create_trigram(bottom_number, bottom_lines);
+
+        let top_lines = [
+            self.lines[3] as u8,
+            self.lines[4] as u8,
+            self.lines[5] as u8,
+        ];
+        let top_number = TRIGRAMS
+            .iter()
+            .find(|(_, lines)| lines == &top_lines)
+            .map(|(number, _)| *number)
+            .unwrap();
+        let top = create_trigram(top_number, top_lines);
+
+        (bottom, top)
     }
 }
 
