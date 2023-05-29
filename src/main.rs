@@ -1,4 +1,5 @@
 mod iching;
+mod iching_analyzer;
 
 use anyhow::Result;
 use clap::Parser;

@@ -149,6 +149,7 @@ lazy_static! {
 }
 
 /// The possition of a line in a hexagram.
+#[derive(Clone, Debug, PartialEq)]
 pub enum HexagramLine {
     First,
     Second,
@@ -219,22 +220,6 @@ impl Hexagram {
         (bottom, top)
     }
 
-    /// Returns the hexagram obtained by reversing the order of the lines in this hexagram.
-    pub fn reverse_lines(&self) -> Hexagram {
-        let lines = [
-            self.lines[5],
-            self.lines[4],
-            self.lines[3],
-            self.lines[2],
-            self.lines[1],
-            self.lines[0],
-        ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
-    }
-
     /// Returns the hexagram obtained by inversing all lines in this hexagram.
     pub fn inverse(&self) -> Hexagram {
         let lines = [
@@ -291,6 +276,22 @@ impl Hexagram {
         let mut lines = self.lines.clone();
         let index = line.line_to_index();
         lines[index] = lines[index].inverse();
+        return HEXAGRAM_INDEX
+            .get(&lines)
+            .map(|hexagram| hexagram.clone())
+            .unwrap();
+    }
+
+    /// Returns the hexagram obtained by reversing the order of the lines in this hexagram.
+    pub fn reverse(&self) -> Hexagram {
+        let lines = [
+            self.lines[5],
+            self.lines[4],
+            self.lines[3],
+            self.lines[2],
+            self.lines[1],
+            self.lines[0],
+        ];
         return HEXAGRAM_INDEX
             .get(&lines)
             .map(|hexagram| hexagram.clone())
@@ -368,7 +369,7 @@ impl Hexagram {
 }
 
 /// The list of all I Ching hexagrams.
-static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
+pub(crate) static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
     (1, [1, 1, 1, 1, 1, 1]),
     (2, [0, 0, 0, 0, 0, 0]),
     (3, [1, 0, 0, 0, 1, 0]),
@@ -436,10 +437,11 @@ static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
 ];
 
 /// Creates a hexagram from a number and a list of lines.
-fn create_hexagram(number: u8, input_lines: [u8; 6]) -> Hexagram {
+pub(crate) fn create_hexagram(number: u8, input_lines: [u8; 6]) -> Hexagram {
     let lines = input_lines.map(Line::from);
     Hexagram { number, lines }
 }
+
 /// Generate a map of lines to hexagrams for fast lookup.
 fn hexagram_index() -> HashMap<[Line; 6], Hexagram> {
     let mut index = HashMap::new();
