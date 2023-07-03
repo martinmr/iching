@@ -17,6 +17,11 @@ enum AnalyzeSubcommand {
 
         #[clap(help = "The hexagram to reach")]
         end: usize,
+
+        #[clap(help = "Print all shortest paths instead of the ones with the least line changes")]
+        #[clap(short, long)]
+        #[clap(default_value = "false")]
+        all: bool,
     },
 }
 
@@ -58,7 +63,11 @@ fn main() -> Result<()> {
         }
         Some(subcommand) => {
             match subcommand {
-                IChingSubcommand::Analyze(AnalyzeSubcommand::ShortestDistance { start, end }) => {
+                IChingSubcommand::Analyze(AnalyzeSubcommand::ShortestDistance {
+                    start,
+                    end,
+                    all,
+                }) => {
                     // Validate the hexagram numbers.
                     if !(1..=64).contains(&start) {
                         bail!("Invalid start hexagram number: {}", start);
@@ -78,16 +87,28 @@ fn main() -> Result<()> {
                         initial_hexagram,
                         final_hexagram,
                     };
-                    let path = searcher.find_path();
+                    let paths = searcher.find_shortest_paths(all);
 
-                    // Print the path.
-                    for (i, (hexagram, op)) in path.iter().enumerate() {
-                        if i != 0 {
-                            println!("Previous hexagram turns into hexagram {} by applying the operation {:?}", hexagram.number, op);
+                    // Print all the paths
+                    println!(">>> Shortest path search found {} path(s)", paths.len());
+                    println!();
+                    for (i, path) in paths.iter().enumerate() {
+                        println!(
+                            ">>> Path #{} from hexagram {} to hexagram {}:",
+                            i + 1,
+                            start,
+                            end
+                        );
+                        println!();
+
+                        for (i, (hexagram, op)) in path.iter().enumerate() {
+                            if i != 0 {
+                                println!("> Previous hexagram turns into hexagram {} by applying the operation {:?}", hexagram.number, op);
+                                println!();
+                            }
+                            hexagram.print(None);
                             println!();
                         }
-                        hexagram.print(None);
-                        println!();
                     }
                 }
             }

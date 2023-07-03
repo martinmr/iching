@@ -61,18 +61,58 @@ pub struct HexagramSearcher {
     pub final_hexagram: Hexagram,
 }
 
+/// A path between two hexagrams, containing the hexagrams and operations to transform them.
+type Path = Vec<(Hexagram, SearchOperation)>;
+
 impl HexagramSearcher {
-    /// Returns the shortest path between the initial and final hexagrams.
-    pub fn find_path(&self) -> Vec<(Hexagram, SearchOperation)> {
+    /// Returns only the paths with the least line changes.
+    fn find_least_lines_changed(paths: &[Path]) -> Vec<Path> {
+        // Find the minimum number of lines for all the paths.
+        let mut min_lines_changed = usize::MAX;
+        for path in paths {
+            let mut lines_changed = 0;
+            for i in 1..path.len() {
+                lines_changed += path[i].0.num_line_changes(&path[i - 1].0);
+            }
+            if min_lines_changed == usize::MAX || lines_changed < min_lines_changed {
+                min_lines_changed = lines_changed;
+            }
+        }
+
+        // Then, return all the paths with the minimum number of lines.
+        let mut out = vec![];
+        for path in paths {
+            let mut lines_changed = 0;
+            for i in 1..path.len() {
+                lines_changed += path[i].0.num_line_changes(&path[i - 1].0);
+            }
+            if lines_changed == min_lines_changed {
+                out.push(path.clone());
+            }
+        }
+        out
+    }
+
+    /// Returns all the shortest paths between the initial and final hexagrams.
+    pub fn find_shortest_paths(&self, all: bool) -> Vec<Path> {
         // Create a queue of paths to search to perform a breadth-first search.
         let mut queue: VecDeque<Vec<(Hexagram, SearchOperation)>> = VecDeque::new();
         queue.push_back(vec![(self.initial_hexagram, SearchOperation::NoOp)]);
         let ops = SearchOperation::all_operations();
 
+        // Store a list of all the shortest paths. Then search until the queue is empty, or we find
+        // all the shortest paths.
+        let mut shortest_paths: Vec<Path> = vec![];
         while !queue.is_empty() {
+            // Take the next path from the queue. Break out of the loop if a shorter path has been
+            // found.
             let path = queue.pop_front().unwrap();
-            let (current_hexagram, _) = path.last().unwrap();
+            if !shortest_paths.is_empty() && path.len() >= shortest_paths[0].len() {
+                break;
+            }
 
+            // Try each operation on the current hexagram.
+            let (current_hexagram, _) = path.last().unwrap();
             for operation in &ops {
                 // Create a new hexagram with the given operation. Ignore it if it's already in the
                 // path.
@@ -86,14 +126,20 @@ impl HexagramSearcher {
                 let mut new_path = path.clone();
                 new_path.push((new_hexagram, operation.clone()));
                 if new_hexagram == self.final_hexagram {
-                    return new_path;
+                    shortest_paths.push(new_path.clone());
+                } else {
+                    queue.push_back(new_path);
                 }
-                queue.push_back(new_path);
             }
         }
 
-        // This point should never be reached, but return an empty path to satisfy the compiler.
-        vec![]
+        // Return the shortest paths. Either return all or only the ones with the least number of
+        // lines changed.
+        if all {
+            shortest_paths
+        } else {
+            Self::find_least_lines_changed(&shortest_paths)
+        }
     }
 }
 
@@ -112,14 +158,14 @@ mod test {
             initial_hexagram: create_hexagram(1, HEXAGRAMS[0].1),
             final_hexagram: create_hexagram(2, HEXAGRAMS[1].1),
         };
-        let expected_path = vec![
+        let expected_path = vec![vec![
             (create_hexagram(1, HEXAGRAMS[0].1), SearchOperation::NoOp),
             (
                 create_hexagram(2, HEXAGRAMS[1].1),
                 SearchOperation::InverseHexagram,
             ),
-        ];
-        let path = searcher.find_path();
+        ]];
+        let path = searcher.find_shortest_paths(false);
         assert_eq!(path, expected_path);
     }
 }

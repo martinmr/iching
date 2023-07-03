@@ -215,7 +215,16 @@ impl Hexagram {
         (bottom, top)
     }
 
-    /// Returns the hexagram obtained by inversing all lines in this hexagram.
+    /// Counts the number of line changes between this and other hexagram.
+    pub fn num_line_changes(&self, other: &Hexagram) -> usize {
+        self.lines
+            .iter()
+            .zip(other.lines.iter())
+            .filter(|(a, b)| a != b)
+            .count()
+    }
+
+    /// Returns the hexagram obtained by inverting all lines in this hexagram.
     pub fn inverse(&self) -> Hexagram {
         let lines = [
             self.lines[0].inverse(),
@@ -228,7 +237,7 @@ impl Hexagram {
         HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
-    /// Returns the hexagram obtained by inversing the bottom trigram of this hexagram.
+    /// Returns the hexagram obtained by inverting the bottom trigram of this hexagram.
     pub fn inverse_bottom_trigram(&self) -> Hexagram {
         let (bottom, top) = self.trigrams();
         let lines = [
