@@ -221,6 +221,10 @@ impl SequenceAnalysis {
         println!(">>> Sequence of hexagrams: {:?}", self.sequence);
         println!(">>> Total operations: {}", self.total_ops);
         println!(">>> Total line changes: {}", self.total_line_changes);
+        println!(
+            ">>> Lines changed per operation: {0:.3}",
+            self.total_line_changes as f32 / self.total_ops as f32
+        );
         println!();
 
         // Print all the shortest paths between each pair of hexagrams.
@@ -242,10 +246,19 @@ impl SequenceAnalysis {
         println!(">>> Sequence of hexagrams: {:?}", self.sequence);
         println!(">>> Total operations: {}", self.total_ops);
         println!(">>> Total line changes: {}", self.total_line_changes);
+        println!(
+            ">>> Lines changed per operation: {0:.3}",
+            self.total_line_changes as f32 / self.total_ops as f32
+        );
         println!();
+
         println!(">>> Sequence of hexagrams: {:?}", other.sequence);
         println!(">>> Total operations: {}", other.total_ops);
         println!(">>> Total line changes: {}", other.total_line_changes);
+        println!(
+            ">>> Lines changed per operation: {0:.3}",
+            other.total_line_changes as f32 / other.total_ops as f32
+        );
         println!();
     }
 }
