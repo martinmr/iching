@@ -192,6 +192,11 @@ impl HexagramSearcher {
     }
 }
 
+// King Wen's sequence is the sequence of hexagrams as they appear in the I Ching.
+pub fn king_wen() -> Vec<usize> {
+    (1..=64).collect()
+}
+
 /// The result of performing a sequence analysis.
 pub struct SequenceAnalysis {
     /// The sequence of hexagrams.
@@ -229,6 +234,20 @@ impl SequenceAnalysis {
             );
         }
     }
+
+    /// Prints a comparison between this analysis and another one.
+    pub fn print_comparison(&self, other: &Self) {
+        println!(">>>>>> Comparison of sequence analyses");
+        println!();
+        println!(">>> Sequence of hexagrams: {:?}", self.sequence);
+        println!(">>> Total operations: {}", self.total_ops);
+        println!(">>> Total line changes: {}", self.total_line_changes);
+        println!();
+        println!(">>> Sequence of hexagrams: {:?}", other.sequence);
+        println!(">>> Total operations: {}", other.total_ops);
+        println!(">>> Total line changes: {}", other.total_line_changes);
+        println!();
+    }
 }
 
 /// Analyzes a sequence of hexagrams.
@@ -238,6 +257,7 @@ pub struct SequenceAnalyzer {
 }
 
 impl SequenceAnalyzer {
+    /// Produces the analysis of the sequence of hexagrams.
     pub fn analyze(&self) -> SequenceAnalysis {
         // Find the shortest paths between each pair of hexagrams.
         let mut shortest_paths = vec![];

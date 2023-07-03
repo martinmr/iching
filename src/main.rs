@@ -1,9 +1,12 @@
+//! CLI utility for generating I Ching readings and analyzing hexagrams.
+
 mod iching;
 mod iching_analyzer;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use iching_analyzer::{print_shortest_path, HexagramSearcher, SequenceAnalyzer};
+use iching_analyzer::{king_wen, print_shortest_path, HexagramSearcher, SequenceAnalyzer};
+use rand::seq::SliceRandom;
 
 use crate::iching::{RandomnessMode, ReadingMethod};
 
@@ -26,6 +29,9 @@ enum AnalyzeSubcommand {
 
     #[clap(about = "Print an analysis of King Wen's sequence")]
     KingWen,
+
+    #[clap(about = "Compare a random sequence to King Wen's sequence")]
+    CompareKingWen,
 }
 
 /// Sub-commands for the CLI.
@@ -81,11 +87,27 @@ fn main() -> Result<()> {
                     print_shortest_path(start, end, &paths)
                 }
                 IChingSubcommand::Analyze(AnalyzeSubcommand::KingWen) => {
-                    // King Wen's sequence is the sequence of hexagrams as they appear in the
-                    // I Ching.
-                    let king_wen: Vec<usize> = (1..=64).collect();
-                    let analyzer = SequenceAnalyzer { sequence: king_wen };
+                    let analyzer = SequenceAnalyzer {
+                        sequence: king_wen(),
+                    };
                     analyzer.analyze().print();
+                }
+                IChingSubcommand::Analyze(AnalyzeSubcommand::CompareKingWen) => {
+                    // Generate a random sequence.
+                    let king_wen_sequence = king_wen();
+                    let mut random_sequence = king_wen();
+                    random_sequence.shuffle(&mut rand::thread_rng());
+
+                    // Compare the random sequence to King Wen's sequence.
+                    let king_wen_analysis = SequenceAnalyzer {
+                        sequence: king_wen_sequence,
+                    }
+                    .analyze();
+                    let random_analysis = SequenceAnalyzer {
+                        sequence: random_sequence,
+                    }
+                    .analyze();
+                    king_wen_analysis.print_comparison(&random_analysis);
                 }
             }
         }
