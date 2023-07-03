@@ -1,6 +1,7 @@
+use anyhow::{bail, Result};
 use std::collections::VecDeque;
 
-use crate::iching::{Hexagram, HexagramLine};
+use crate::iching::{create_hexagram, Hexagram, HexagramLine, HEXAGRAMS};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum SearchOperation {
@@ -55,38 +56,86 @@ impl SearchOperation {
     }
 }
 
+/// A path between two hexagrams, containing the hexagrams and operations to transform them.
+type Path = Vec<(Hexagram, SearchOperation)>;
+
+pub fn print_shortest_path(start: usize, end: usize, paths: &[Path]) {
+    for (i, path) in paths.iter().enumerate() {
+        println!(
+            ">>> Path #{} from hexagram {} to hexagram {}:",
+            i + 1,
+            start,
+            end
+        );
+        println!();
+
+        for (i, (hexagram, op)) in path.iter().enumerate() {
+            if i != 0 {
+                println!(
+                    "> Previous hexagram turns into hexagram {} by applying the operation {:?}",
+                    hexagram.number, op
+                );
+                println!();
+            }
+            hexagram.print(None);
+            println!();
+        }
+    }
+}
+
+pub fn count_line_changes(path: &Path) -> u64 {
+    let mut count: u64 = 0;
+    for i in 1..path.len() {
+        count += path[i].0.num_line_changes(&path[i - 1].0) as u64;
+    }
+    count
+}
+
 /// Given two hexagrams, finds the shortest path between them.
 pub struct HexagramSearcher {
     pub initial_hexagram: Hexagram,
     pub final_hexagram: Hexagram,
 }
 
-/// A path between two hexagrams, containing the hexagrams and operations to transform them.
-type Path = Vec<(Hexagram, SearchOperation)>;
-
 impl HexagramSearcher {
+    /// Creates a new hexagram searcher.
+    pub fn new(start: usize, end: usize) -> Result<Self> {
+        // Validate the hexagram numbers.
+        if !(1..=64).contains(&start) {
+            bail!("Invalid start hexagram number: {}", start);
+        }
+        if !(1..=64).contains(&end) {
+            bail!("Invalid end hexagram number: {}", end);
+        }
+
+        // Get the lines and hexagrams.
+        let start_lines = HEXAGRAMS[start - 1];
+        let end_lines = HEXAGRAMS[end - 1];
+        let initial_hexagram = create_hexagram(start_lines.0, start_lines.1);
+        let final_hexagram = create_hexagram(end_lines.0, end_lines.1);
+
+        Ok(Self {
+            initial_hexagram,
+            final_hexagram,
+        })
+    }
+
     /// Returns only the paths with the least line changes.
     fn find_least_lines_changed(paths: &[Path]) -> Vec<Path> {
         // Find the minimum number of lines for all the paths.
-        let mut min_lines_changed = usize::MAX;
+        let mut min_lines_changed = u64::MAX;
         for path in paths {
-            let mut lines_changed = 0;
-            for i in 1..path.len() {
-                lines_changed += path[i].0.num_line_changes(&path[i - 1].0);
-            }
-            if min_lines_changed == usize::MAX || lines_changed < min_lines_changed {
-                min_lines_changed = lines_changed;
+            let line_changes = count_line_changes(path);
+            if min_lines_changed == u64::MAX || line_changes < min_lines_changed {
+                min_lines_changed = line_changes;
             }
         }
 
         // Then, return all the paths with the minimum number of lines.
         let mut out = vec![];
         for path in paths {
-            let mut lines_changed = 0;
-            for i in 1..path.len() {
-                lines_changed += path[i].0.num_line_changes(&path[i - 1].0);
-            }
-            if lines_changed == min_lines_changed {
+            let line_changes = count_line_changes(path);
+            if line_changes == min_lines_changed {
                 out.push(path.clone());
             }
         }
@@ -139,6 +188,80 @@ impl HexagramSearcher {
             shortest_paths
         } else {
             Self::find_least_lines_changed(&shortest_paths)
+        }
+    }
+}
+
+/// The result of performing a sequence analysis.
+pub struct SequenceAnalysis {
+    /// The sequence of hexagrams.
+    pub sequence: Vec<usize>,
+
+    /// The shortest paths between each pair of hexagrams.
+    pub shortest_paths: Vec<Vec<Path>>,
+
+    /// The total number of operations between the initial and final hexagrams in the sequence.
+    pub total_ops: u64,
+
+    /// The total number of line changes between the initial and final hexagrams in the sequence.
+    pub total_line_changes: u64,
+}
+
+impl SequenceAnalysis {
+    /// Prints the entire analysis.
+    pub fn print(&self) {
+        // Print the part of the analysis concerning the whole sequence.
+        println!(">>>>>> Analysis of sequence of hexagrams");
+        println!();
+        println!(">>> Sequence of hexagrams: {:?}", self.sequence);
+        println!(">>> Total operations: {}", self.total_ops);
+        println!(">>> Total line changes: {}", self.total_line_changes);
+        println!();
+
+        // Print all the shortest paths between each pair of hexagrams.
+        println!(">>> Shortest paths between each pair of hexagrams:");
+        println!();
+        for i in 1..self.sequence.len() {
+            print_shortest_path(
+                self.sequence[i - 1],
+                self.sequence[i],
+                &self.shortest_paths[i - 1],
+            );
+        }
+    }
+}
+
+/// Analyzes a sequence of hexagrams.
+pub struct SequenceAnalyzer {
+    /// The sequence of hexagrams to analyze, as a vector of hexagram numbers.
+    pub sequence: Vec<usize>,
+}
+
+impl SequenceAnalyzer {
+    pub fn analyze(&self) -> SequenceAnalysis {
+        // Find the shortest paths between each pair of hexagrams.
+        let mut shortest_paths = vec![];
+        for i in 1..self.sequence.len() {
+            let searcher = HexagramSearcher::new(self.sequence[i - 1], self.sequence[i]).unwrap();
+            let paths = searcher.find_shortest_paths(false);
+            shortest_paths.push(paths);
+        }
+
+        // Compute the sum of operations and line changes.
+        let total_ops = shortest_paths
+            .iter()
+            .map(|paths| paths[0].len() as u64)
+            .sum();
+        let total_line_changes = shortest_paths
+            .iter()
+            .map(|paths| count_line_changes(&paths[0]))
+            .sum();
+
+        SequenceAnalysis {
+            sequence: self.sequence.clone(),
+            shortest_paths,
+            total_ops,
+            total_line_changes,
         }
     }
 }

@@ -1,16 +1,16 @@
 mod iching;
 mod iching_analyzer;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
-use iching::{create_hexagram, HEXAGRAMS};
-use iching_analyzer::HexagramSearcher;
+use iching_analyzer::{print_shortest_path, HexagramSearcher, SequenceAnalyzer};
 
 use crate::iching::{RandomnessMode, ReadingMethod};
 
 /// Contains subcommands used for manipulating git repositories containing Trane courses.
 #[derive(Clone, Debug, Subcommand)]
 enum AnalyzeSubcommand {
+    #[clap(about = "Find the shortest path between two hexagrams")]
     ShortestDistance {
         #[clap(help = "The hexagram from which to start")]
         start: usize,
@@ -23,6 +23,9 @@ enum AnalyzeSubcommand {
         #[clap(default_value = "false")]
         all: bool,
     },
+
+    #[clap(about = "Print an analysis of King Wen's sequence")]
+    KingWen,
 }
 
 /// Sub-commands for the CLI.
@@ -68,48 +71,21 @@ fn main() -> Result<()> {
                     end,
                     all,
                 }) => {
-                    // Validate the hexagram numbers.
-                    if !(1..=64).contains(&start) {
-                        bail!("Invalid start hexagram number: {}", start);
-                    }
-                    if !(1..=64).contains(&end) {
-                        bail!("Invalid end hexagram number: {}", end);
-                    }
-
-                    // Get the lines and hexagrams.
-                    let start_lines = HEXAGRAMS[start - 1];
-                    let end_lines = HEXAGRAMS[end - 1];
-                    let initial_hexagram = create_hexagram(start_lines.0, start_lines.1);
-                    let final_hexagram = create_hexagram(end_lines.0, end_lines.1);
-
                     // Perform the search.
-                    let searcher = HexagramSearcher {
-                        initial_hexagram,
-                        final_hexagram,
-                    };
+                    let searcher = HexagramSearcher::new(start, end)?;
                     let paths = searcher.find_shortest_paths(all);
 
                     // Print all the paths
                     println!(">>> Shortest path search found {} path(s)", paths.len());
                     println!();
-                    for (i, path) in paths.iter().enumerate() {
-                        println!(
-                            ">>> Path #{} from hexagram {} to hexagram {}:",
-                            i + 1,
-                            start,
-                            end
-                        );
-                        println!();
-
-                        for (i, (hexagram, op)) in path.iter().enumerate() {
-                            if i != 0 {
-                                println!("> Previous hexagram turns into hexagram {} by applying the operation {:?}", hexagram.number, op);
-                                println!();
-                            }
-                            hexagram.print(None);
-                            println!();
-                        }
-                    }
+                    print_shortest_path(start, end, &paths)
+                }
+                IChingSubcommand::Analyze(AnalyzeSubcommand::KingWen) => {
+                    // King Wen's sequence is the sequence of hexagrams as they appear in the
+                    // I Ching.
+                    let king_wen: Vec<usize> = (1..=64).collect();
+                    let analyzer = SequenceAnalyzer { sequence: king_wen };
+                    analyzer.analyze().print();
                 }
             }
         }
