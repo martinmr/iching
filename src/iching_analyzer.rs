@@ -286,7 +286,7 @@ impl SequenceAnalyzer {
         // Compute the sum of operations and line changes.
         let total_ops = shortest_paths
             .iter()
-            .map(|paths| paths[0].len() as u64)
+            .map(|paths| (paths[0].len() - 1) as u64)
             .sum();
         let total_line_changes = shortest_paths
             .iter()
