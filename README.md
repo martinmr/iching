@@ -1,18 +1,42 @@
 # I Ching
 
 ```
-I Ching 0.1.0
-CLI program to generate an I Ching reading based on data from random.org
+Arguments for the CLI
 
-USAGE:
-    iching [OPTIONS]
+Usage: iching [OPTIONS]
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+Options:
+  -m, --method <METHOD>
+          The method used to generate the reading
 
-OPTIONS:
-        --mode <MODE>            Mode used to generate the reading. Takes a value of either 'random' or 'pseudorandom'
-                                 [default: random]
-        --question <question>    The question to ask to the I Ching (optional) [default: ]
+          [default: yarrow-stalks]
+
+          Possible values:
+          - yarrow-stalks: A method using yarrow stalks. This is the traditional method, which is
+                more involved. The probabilities that a yin or yang line will transform are not
+                equal. This asymmetry reflects the traditional understanding of the intrinsic
+                tendency of yin towards stability and of yang towards transformation
+          - coin:          A method using random draws from a coin. This is a simplified method,
+                which is easier to perform. The probabilities that a yin or yang line will transform
+                are equal
+
+  -r, --randomness <RANDOMNESS>
+          Whether to use random.org or a pseudorandom number generator to generate the reading
+
+          [default: random]
+
+          Possible values:
+          - random:       Generate truly random numbers using random.org
+          - pseudorandom: Generate pseudo-random numbers using the system's random number generator
+
+  -q, --question <QUESTION>
+          The optional question to ask the I Ching
+
+          [default: ]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
 ```
