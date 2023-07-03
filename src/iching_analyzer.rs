@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use rand::seq::SliceRandom;
 use std::collections::VecDeque;
 
 use crate::iching::{create_hexagram, Hexagram, HexagramLine, HEXAGRAMS};
@@ -201,6 +202,7 @@ pub fn king_wen() -> Vec<usize> {
 }
 
 /// The result of performing a sequence analysis.
+#[derive(Clone, Debug, Default)]
 pub struct SequenceAnalysis {
     /// The sequence of hexagrams.
     pub sequence: Vec<usize>,
@@ -299,6 +301,25 @@ impl SequenceAnalyzer {
             total_paths,
         }
     }
+}
+
+/// Finds the best random shuffling of the King Wen's sequence by the number of operations.
+pub fn find_min_random_sequence(num_sequences: usize) -> SequenceAnalysis {
+    let mut min_ops = u64::MAX;
+    let mut min_sequence = SequenceAnalysis::default();
+    for _ in 0..num_sequences {
+        let mut random_sequence = king_wen();
+        random_sequence.shuffle(&mut rand::thread_rng());
+        let random_analysis = SequenceAnalyzer {
+            sequence: random_sequence,
+        }
+        .analyze();
+        if random_analysis.total_ops < min_ops {
+            min_ops = random_analysis.total_ops;
+            min_sequence = random_analysis;
+        }
+    }
+    min_sequence
 }
 
 #[cfg(test)]

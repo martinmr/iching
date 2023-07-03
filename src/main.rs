@@ -5,8 +5,9 @@ mod iching_analyzer;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use iching_analyzer::{king_wen, print_shortest_path, HexagramSearcher, SequenceAnalyzer};
-use rand::seq::SliceRandom;
+use iching_analyzer::{
+    find_min_random_sequence, king_wen, print_shortest_path, HexagramSearcher, SequenceAnalyzer,
+};
 
 use crate::iching::{RandomnessMode, ReadingMethod};
 
@@ -31,7 +32,15 @@ enum AnalyzeSubcommand {
     KingWen,
 
     #[clap(about = "Compare a random sequence to King Wen's sequence")]
-    CompareKingWen,
+    CompareKingWen {
+        #[clap(
+            help = "The number of random sequences to generate. Only the one with the least \
+            operations will be printed"
+        )]
+        #[clap(default_value = "1")]
+        #[clap(short, long)]
+        num_sequences: usize,
+    },
 }
 
 /// Sub-commands for the CLI.
@@ -92,22 +101,17 @@ fn main() -> Result<()> {
                     };
                     analyzer.analyze().print();
                 }
-                IChingSubcommand::Analyze(AnalyzeSubcommand::CompareKingWen) => {
-                    // Generate a random sequence.
+                IChingSubcommand::Analyze(AnalyzeSubcommand::CompareKingWen { num_sequences }) => {
+                    // Generate King Wen's sequence and analysis.
                     let king_wen_sequence = king_wen();
-                    let mut random_sequence = king_wen();
-                    random_sequence.shuffle(&mut rand::thread_rng());
-
-                    // Compare the random sequence to King Wen's sequence.
                     let king_wen_analysis = SequenceAnalyzer {
                         sequence: king_wen_sequence,
                     }
                     .analyze();
-                    let random_analysis = SequenceAnalyzer {
-                        sequence: random_sequence,
-                    }
-                    .analyze();
-                    king_wen_analysis.print_comparison(&random_analysis);
+
+                    // Generate random sequences and analyze them.
+                    let min_sequence = find_min_random_sequence(num_sequences);
+                    king_wen_analysis.print_comparison(&min_sequence);
                 }
             }
         }
