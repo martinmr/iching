@@ -3,7 +3,11 @@
 ```
 Arguments for the CLI
 
-Usage: iching [OPTIONS]
+Usage: iching [OPTIONS] [COMMAND]
+
+Commands:
+  analyze  Sub-commands to analyze hexagrams
+  help     Print this message or the help of the given subcommand(s)
 
 Options:
   -m, --method <METHOD>

@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use crate::iching::{Hexagram, HexagramLine};
 
 #[derive(Clone, Debug, PartialEq)]
-enum SearchOperation {
+pub enum SearchOperation {
     NoOp,
     InverseLine(HexagramLine),
     InverseBottomTrigram,
@@ -50,23 +50,23 @@ impl SearchOperation {
             Self::ReverseTopTrigram => hexagram.reverse_top_trigram(),
             Self::ReverseBottomTrigram => hexagram.reverse_bottom_trigram(),
             Self::MirrorTrigrams => hexagram.mirror_trigrams(),
-            Self::NoOp => hexagram.clone(),
+            Self::NoOp => *hexagram,
         }
     }
 }
 
 /// Given two hexagrams, finds the shortest path between them.
-struct HexagramSearcher {
-    initial_hexagram: Hexagram,
-    final_hexagram: Hexagram,
+pub struct HexagramSearcher {
+    pub initial_hexagram: Hexagram,
+    pub final_hexagram: Hexagram,
 }
 
 impl HexagramSearcher {
     /// Returns the shortest path between the initial and final hexagrams.
-    fn find_path(&self) -> Vec<(Hexagram, SearchOperation)> {
+    pub fn find_path(&self) -> Vec<(Hexagram, SearchOperation)> {
         // Create a queue of paths to search to perform a breadth-first search.
         let mut queue: VecDeque<Vec<(Hexagram, SearchOperation)>> = VecDeque::new();
-        queue.push_back(vec![(self.initial_hexagram.clone(), SearchOperation::NoOp)]);
+        queue.push_back(vec![(self.initial_hexagram, SearchOperation::NoOp)]);
         let ops = SearchOperation::all_operations();
 
         while !queue.is_empty() {
@@ -81,7 +81,7 @@ impl HexagramSearcher {
                     continue;
                 }
 
-                // Create the new path and return it if it's the final hexagram. Otherwise add the
+                // Create the new path and return it if it's the final hexagram. Otherwise, add the
                 // new path to the queue.
                 let mut new_path = path.clone();
                 new_path.push((new_hexagram, operation.clone()));

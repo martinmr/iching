@@ -36,7 +36,8 @@ impl From<u8> for Line {
     }
 }
 
-/// The possition of a line in a trigram.
+/// The position of a line in a trigram.
+#[allow(dead_code)]
 pub enum TrigramLine {
     First,
     Second,
@@ -45,6 +46,7 @@ pub enum TrigramLine {
 
 impl TrigramLine {
     /// Converts a line into an array index.
+    #[allow(dead_code)]
     fn line_to_index(&self) -> usize {
         match self {
             TrigramLine::First => 0,
@@ -67,6 +69,7 @@ pub struct Trigram {
 
 impl Trigram {
     /// Prints the trigram to the console.
+    #[allow(dead_code)]
     pub fn print(&self) {
         println!("     {}\n", self.number);
         for line in self.lines.iter().rev() {
@@ -79,41 +82,33 @@ impl Trigram {
     }
 
     /// Returns the trigram obtained by reversing the order of the lines in this trigram.
+    #[allow(dead_code)]
     pub fn reverse(&self) -> Trigram {
         let lines = [self.lines[2], self.lines[1], self.lines[0]];
-        return TRIGRAM_INDEX
-            .get(&lines)
-            .map(|trigram| trigram.clone())
-            .unwrap();
+        TRIGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the trigram obtained by flipping the lines in this trigram.
+    #[allow(dead_code)]
     pub fn inverse(&self) -> Trigram {
         let lines = [
             self.lines[0].inverse(),
             self.lines[1].inverse(),
             self.lines[2].inverse(),
         ];
-
-        return TRIGRAM_INDEX
-            .get(&lines)
-            .map(|trigram| trigram.clone())
-            .unwrap();
+        TRIGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
-    /// Returns the trigram obtained by inversing the given line.
+    /// Returns the trigram obtained by inverting the given line.
+    #[allow(dead_code)]
     pub fn inverse_line(&self, line: TrigramLine) -> Trigram {
-        let mut lines = self.lines.clone();
+        let mut lines = self.lines;
         lines[line.line_to_index()] = lines[line.line_to_index()].inverse();
-
-        return TRIGRAM_INDEX
-            .get(&lines)
-            .map(|trigram| trigram.clone())
-            .unwrap();
+        TRIGRAM_INDEX.get(&lines).copied().unwrap()
     }
 }
 
-/// The list of all I Ching trigams.
+/// The list of all I Ching trigrams.
 static TRIGRAMS: [(u8, [u8; 3]); 8] = [
     (1, [1, 1, 1]),
     (2, [1, 0, 0]),
@@ -230,10 +225,7 @@ impl Hexagram {
             self.lines[4].inverse(),
             self.lines[5].inverse(),
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the hexagram obtained by inversing the bottom trigram of this hexagram.
@@ -247,13 +239,10 @@ impl Hexagram {
             top.lines[1],
             top.lines[2],
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
-    /// Returns the hexagram obtained by inversing the top trigram of this hexagram.
+    /// Returns the hexagram obtained by inverting the top trigram of this hexagram.
     pub fn inverse_top_trigram(&self) -> Hexagram {
         let (bottom, top) = self.trigrams();
         let lines = [
@@ -264,22 +253,16 @@ impl Hexagram {
             top.lines[1].inverse(),
             top.lines[2].inverse(),
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
-    /// Returns the hexagram obtained by inversing the given line. The line number is zero-based,
+    /// Returns the hexagram obtained by inverting the given line. The line number is zero-based,
     /// with zero being the bottom line.
     pub fn inverse_line(&self, line: HexagramLine) -> Hexagram {
-        let mut lines = self.lines.clone();
+        let mut lines = self.lines;
         let index = line.line_to_index();
         lines[index] = lines[index].inverse();
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the hexagram obtained by reversing the order of the lines in this hexagram.
@@ -292,13 +275,11 @@ impl Hexagram {
             self.lines[1],
             self.lines[0],
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the hexagram obtained by reversing the trigrams of this hexagram.
+    #[allow(dead_code)]
     pub fn reverse_trigrams(&self) -> Hexagram {
         let (bottom, top) = self.trigrams();
         let lines = [
@@ -309,10 +290,7 @@ impl Hexagram {
             bottom.lines[1],
             bottom.lines[0],
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the hexagram obtained by reversing the bottom trigram of this hexagram.
@@ -326,10 +304,7 @@ impl Hexagram {
             top.lines[1],
             top.lines[2],
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the hexagram obtained by reversing the top trigram of this hexagram.
@@ -343,10 +318,7 @@ impl Hexagram {
             top.lines[1],
             top.lines[0],
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the hexagram obtained by mirroring the trigrams of this hexagram along the dividing
@@ -361,15 +333,12 @@ impl Hexagram {
             top.lines[1],
             top.lines[0],
         ];
-        return HEXAGRAM_INDEX
-            .get(&lines)
-            .map(|hexagram| hexagram.clone())
-            .unwrap();
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 }
 
 /// The list of all I Ching hexagrams.
-pub(crate) static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
+pub static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
     (1, [1, 1, 1, 1, 1, 1]),
     (2, [0, 0, 0, 0, 0, 0]),
     (3, [1, 0, 0, 0, 1, 0]),
@@ -437,7 +406,7 @@ pub(crate) static HEXAGRAMS: [(u8, [u8; 6]); 64] = [
 ];
 
 /// Creates a hexagram from a number and a list of lines.
-pub(crate) fn create_hexagram(number: u8, input_lines: [u8; 6]) -> Hexagram {
+pub fn create_hexagram(number: u8, input_lines: [u8; 6]) -> Hexagram {
     let lines = input_lines.map(Line::from);
     Hexagram { number, lines }
 }
@@ -494,7 +463,7 @@ impl Reading {
 
 /// The method used to generate the reading.
 #[derive(Clone, Debug, ValueEnum)]
-pub(crate) enum ReadingMethod {
+pub enum ReadingMethod {
     /// A method using yarrow stalks. This is the traditional method, which is more involved. The
     /// probabilities that a yin or yang line will transform are not equal. This asymmetry reflects
     /// the traditional understanding of the intrinsic tendency of yin towards stability and of yang
@@ -517,7 +486,7 @@ impl Display for ReadingMethod {
 
 /// The method used to generate random numbers.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
-pub(crate) enum RandomnessMode {
+pub enum RandomnessMode {
     /// Generate truly random numbers using random.org.
     Random,
 
@@ -657,7 +626,7 @@ fn yarrow_stalk_reading(randomness: RandomnessMode) -> Result<Vec<u8>> {
 }
 
 /// Generate a reading of the I Ching using the given reading mode and randomness mode.
-pub(crate) fn generate_reading(
+pub fn generate_reading(
     method: ReadingMethod,
     randomness: RandomnessMode,
     question: &str,
