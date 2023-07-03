@@ -213,14 +213,14 @@ pub struct SequenceAnalysis {
 
     /// The total number of line changes between the initial and final hexagrams in the sequence.
     pub total_line_changes: u64,
+
+    /// The total number of paths from the initial to the final hexagram.
+    pub total_paths: u128,
 }
 
 impl SequenceAnalysis {
-    /// Prints the entire analysis.
-    pub fn print(&self) {
-        // Print the part of the analysis concerning the whole sequence.
-        println!(">>>>>> Analysis of sequence of hexagrams");
-        println!();
+    /// Prints the info in the analysis minus the paths themselves.
+    fn print_info(&self) {
         println!(">>> Sequence of hexagrams: {:?}", self.sequence);
         println!(">>> Total operations: {}", self.total_ops);
         println!(">>> Total line changes: {}", self.total_line_changes);
@@ -228,7 +228,16 @@ impl SequenceAnalysis {
             ">>> Lines changed per operation: {0:.3}",
             self.total_line_changes as f32 / self.total_ops as f32
         );
+        println!(">>> Total paths: {}", self.total_paths);
         println!();
+    }
+
+    /// Prints the entire analysis.
+    pub fn print(&self) {
+        // Print the part of the analysis concerning the whole sequence.
+        println!(">>>>>> Analysis of sequence of hexagrams");
+        println!();
+        self.print_info();
 
         // Print all the shortest paths between each pair of hexagrams.
         println!(">>> Shortest paths between each pair of hexagrams:");
@@ -246,23 +255,8 @@ impl SequenceAnalysis {
     pub fn print_comparison(&self, other: &Self) {
         println!(">>>>>> Comparison of sequence analyses");
         println!();
-        println!(">>> Sequence of hexagrams: {:?}", self.sequence);
-        println!(">>> Total operations: {}", self.total_ops);
-        println!(">>> Total line changes: {}", self.total_line_changes);
-        println!(
-            ">>> Lines changed per operation: {0:.3}",
-            self.total_line_changes as f32 / self.total_ops as f32
-        );
-        println!();
-
-        println!(">>> Sequence of hexagrams: {:?}", other.sequence);
-        println!(">>> Total operations: {}", other.total_ops);
-        println!(">>> Total line changes: {}", other.total_line_changes);
-        println!(
-            ">>> Lines changed per operation: {0:.3}",
-            other.total_line_changes as f32 / other.total_ops as f32
-        );
-        println!();
+        self.print_info();
+        other.print_info();
     }
 }
 
@@ -283,7 +277,7 @@ impl SequenceAnalyzer {
             shortest_paths.push(paths);
         }
 
-        // Compute the sum of operations and line changes.
+        // Compute the other values from the shortest paths.
         let total_ops = shortest_paths
             .iter()
             .map(|paths| (paths[0].len() - 1) as u64)
@@ -292,12 +286,17 @@ impl SequenceAnalyzer {
             .iter()
             .map(|paths| count_line_changes(&paths[0]))
             .sum();
+        let total_paths = shortest_paths
+            .iter()
+            .map(|paths| paths.len() as u128)
+            .product();
 
         SequenceAnalysis {
             sequence: self.sequence.clone(),
             shortest_paths,
             total_ops,
             total_line_changes,
+            total_paths,
         }
     }
 }
