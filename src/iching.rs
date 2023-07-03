@@ -291,21 +291,6 @@ impl Hexagram {
         HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
-    /// Returns the hexagram obtained by reversing the trigrams of this hexagram.
-    #[allow(dead_code)]
-    pub fn reverse_trigrams(&self) -> Hexagram {
-        let (bottom, top) = self.trigrams();
-        let lines = [
-            top.lines[2],
-            top.lines[1],
-            top.lines[0],
-            bottom.lines[2],
-            bottom.lines[1],
-            bottom.lines[0],
-        ];
-        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
-    }
-
     /// Returns the hexagram obtained by reversing the bottom trigram of this hexagram.
     pub fn reverse_bottom_trigram(&self) -> Hexagram {
         let (bottom, top) = self.trigrams();
@@ -330,6 +315,20 @@ impl Hexagram {
             top.lines[2],
             top.lines[1],
             top.lines[0],
+        ];
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
+    }
+
+    /// Returns the hexagram obtained by flipping the top and bottom trigrams of this hexagram.
+    pub fn flip_trigrams(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            top.lines[0],
+            top.lines[1],
+            top.lines[2],
+            bottom.lines[0],
+            bottom.lines[1],
+            bottom.lines[2],
         ];
         HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
