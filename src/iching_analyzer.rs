@@ -1,3 +1,5 @@
+//! Module containing functions for analyzing hexagrams and sequences of hexagrams.
+
 use anyhow::{bail, Result};
 use rand::seq::SliceRandom;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -6,6 +8,7 @@ use std::collections::VecDeque;
 use crate::iching::{create_hexagram, Hexagram, HexagramLine, HEXAGRAMS};
 
 #[derive(Clone, Debug, PartialEq)]
+#[allow(missing_docs)]
 pub enum SearchOperation {
     NoOp,
     InverseLine(HexagramLine),
@@ -64,6 +67,7 @@ impl SearchOperation {
 /// A path between two hexagrams, containing the hexagrams and operations to transform them.
 type Path = Vec<(Hexagram, SearchOperation)>;
 
+/// Prints the shortest path between two hexagrams.
 pub fn print_shortest_path(start: usize, end: usize, paths: &[Path]) {
     for (i, path) in paths.iter().enumerate() {
         println!(
@@ -88,6 +92,7 @@ pub fn print_shortest_path(start: usize, end: usize, paths: &[Path]) {
     }
 }
 
+/// Counts the total number of line changes in a path between two hexagrams.
 pub fn count_line_changes(path: &Path) -> u64 {
     let mut count: u64 = 0;
     for i in 1..path.len() {
@@ -98,7 +103,10 @@ pub fn count_line_changes(path: &Path) -> u64 {
 
 /// Given two hexagrams, finds the shortest path between them.
 pub struct HexagramSearcher {
+    /// The initial hexagram from which to start the search.
     pub initial_hexagram: Hexagram,
+
+    /// The final hexagram to reach.
     pub final_hexagram: Hexagram,
 }
 
@@ -197,7 +205,7 @@ impl HexagramSearcher {
     }
 }
 
-// King Wen's sequence is the sequence of hexagrams as they appear in the I Ching.
+/// King Wen's sequence is the sequence of hexagrams as they appear in the I Ching.
 pub fn king_wen() -> Vec<usize> {
     (1..=64).collect()
 }

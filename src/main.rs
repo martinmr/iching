@@ -1,7 +1,7 @@
 //! CLI utility for generating I Ching readings and analyzing hexagrams.
 
-mod iching;
-mod iching_analyzer;
+pub mod iching;
+pub mod iching_analyzer;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};

@@ -1,3 +1,5 @@
+//! Module containing the core I Ching types and the logic to perform a reading.
+
 use anyhow::{anyhow, bail, Result};
 use clap::ValueEnum;
 use lazy_static::lazy_static;
@@ -38,6 +40,7 @@ impl From<u8> for Line {
 
 /// The position of a line in a trigram.
 #[allow(dead_code)]
+#[allow(missing_docs)]
 pub enum TrigramLine {
     First,
     Second,
@@ -145,6 +148,7 @@ lazy_static! {
 
 /// The position of a line in a hexagram.
 #[derive(Clone, Debug, PartialEq)]
+#[allow(missing_docs)]
 pub enum HexagramLine {
     First,
     Second,
