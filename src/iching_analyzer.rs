@@ -14,6 +14,7 @@ pub enum SearchOperation {
     MirrorTrigrams,
     InverseHexagram,
     ReverseHexagram,
+    NuclearTrigrams,
 }
 
 impl SearchOperation {
@@ -33,6 +34,7 @@ impl SearchOperation {
             Self::MirrorTrigrams,
             Self::InverseHexagram,
             Self::ReverseHexagram,
+            Self::NuclearTrigrams,
         ]
     }
 
@@ -51,6 +53,7 @@ impl SearchOperation {
             Self::ReverseTopTrigram => hexagram.reverse_top_trigram(),
             Self::ReverseBottomTrigram => hexagram.reverse_bottom_trigram(),
             Self::MirrorTrigrams => hexagram.mirror_trigrams(),
+            Self::NuclearTrigrams => hexagram.nuclear_trigrams(),
             Self::NoOp => *hexagram,
         }
     }

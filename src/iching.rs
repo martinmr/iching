@@ -143,7 +143,7 @@ lazy_static! {
     static ref TRIGRAM_INDEX: HashMap<[Line; 3], Trigram> = trigram_index();
 }
 
-/// The possition of a line in a hexagram.
+/// The position of a line in a hexagram.
 #[derive(Clone, Debug, PartialEq)]
 pub enum HexagramLine {
     First,
@@ -341,6 +341,20 @@ impl Hexagram {
             top.lines[2],
             top.lines[1],
             top.lines[0],
+        ];
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
+    }
+
+    /// Returns the hexagram obtained by superimposing the upper and lower nuclear trigrams of
+    /// this hexagram.
+    pub fn nuclear_trigrams(&self) -> Hexagram {
+        let lines = [
+            self.lines[1],
+            self.lines[2],
+            self.lines[3],
+            self.lines[2],
+            self.lines[3],
+            self.lines[4],
         ];
         HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
@@ -719,7 +733,7 @@ mod test {
         }
     }
 
-    /// A reading method using the coin method with pseudorandomness.
+    /// A reading method using the coin method with pseudo-randomness.
     struct CoinPseudorandom {}
     impl ReadingGenerator for CoinPseudorandom {
         fn generate_reading(&self) -> Result<Vec<u8>> {
@@ -735,7 +749,7 @@ mod test {
         }
     }
 
-    /// A reading method using the yarrow stalks method with pseudorandomness.
+    /// A reading method using the yarrow stalks method with pseudo-randomness.
     struct YarrowStalksPseudorandom {}
     impl ReadingGenerator for YarrowStalksPseudorandom {
         fn generate_reading(&self) -> Result<Vec<u8>> {
@@ -775,7 +789,7 @@ mod test {
         .verify_reading()
     }
 
-    /// Verifies the coin method with pseudorandomness.
+    /// Verifies the coin method with pseudo-randomness.
     #[test]
     fn test_coin_pseudorandom() -> Result<()> {
         ReadingVerifier {
@@ -795,7 +809,7 @@ mod test {
         .verify_reading()
     }
 
-    /// Verifies the yarrow stalks method with pseudorandomness.
+    /// Verifies the yarrow stalks method with pseudo-randomness.
     #[test]
     fn test_yarrow_stalks_pseudorandom() -> Result<()> {
         ReadingVerifier {
@@ -805,7 +819,7 @@ mod test {
         .verify_reading()
     }
 
-    /// Verifies that the correct trigrams are extracted from an hexagram.
+    /// Verifies that the correct trigrams are extracted from a hexagram.
     #[test]
     fn hexagram_trigrams() -> Result<()> {
         for hexagram in HEXAGRAM_INDEX.values() {
