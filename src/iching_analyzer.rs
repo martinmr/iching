@@ -1,5 +1,6 @@
 use anyhow::{bail, Result};
 use rand::seq::SliceRandom;
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use std::collections::VecDeque;
 
 use crate::iching::{create_hexagram, Hexagram, HexagramLine, HEXAGRAMS};
@@ -305,21 +306,18 @@ impl SequenceAnalyzer {
 
 /// Finds the best random shuffling of the King Wen's sequence by the number of operations.
 pub fn find_min_random_sequence(num_sequences: usize) -> SequenceAnalysis {
-    let mut min_ops = u64::MAX;
-    let mut min_sequence = SequenceAnalysis::default();
-    for _ in 0..num_sequences {
-        let mut random_sequence = king_wen();
-        random_sequence.shuffle(&mut rand::thread_rng());
-        let random_analysis = SequenceAnalyzer {
-            sequence: random_sequence,
-        }
-        .analyze();
-        if random_analysis.total_ops < min_ops {
-            min_ops = random_analysis.total_ops;
-            min_sequence = random_analysis;
-        }
-    }
-    min_sequence
+    (0..num_sequences)
+        .into_par_iter()
+        .map(|_| {
+            let mut random_sequence = king_wen();
+            random_sequence.shuffle(&mut rand::thread_rng());
+            SequenceAnalyzer {
+                sequence: random_sequence,
+            }
+            .analyze()
+        })
+        .min_by_key(|analysis| analysis.total_ops)
+        .unwrap()
 }
 
 #[cfg(test)]
