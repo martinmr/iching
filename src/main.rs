@@ -7,7 +7,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use iching_analyzer::{
     find_min_random_sequence, king_wen, print_shortest_path, HexagramAnalysis, HexagramSearcher,
-    SequenceAnalyzer,
+    SequenceAnalysis,
 };
 
 use crate::iching::{RandomnessMode, ReadingMethod};
@@ -89,26 +89,17 @@ fn main() -> Result<()> {
         Some(subcommand) => {
             match subcommand {
                 IChingSubcommand::Analyze(AnalyzeSubcommand::CompareKingWen { num_sequences }) => {
-                    // Generate King Wen's sequence and analysis.
-                    let king_wen_sequence = king_wen();
-                    let king_wen_analysis = SequenceAnalyzer {
-                        sequence: king_wen_sequence,
-                    }
-                    .analyze();
-
-                    // Generate random sequences and analyze them.
-                    let min_sequence = find_min_random_sequence(num_sequences);
-                    king_wen_analysis.print_comparison(&min_sequence);
+                    let king_wen_analysis = SequenceAnalysis::new(king_wen())?;
+                    let min_analysis = find_min_random_sequence(num_sequences)?;
+                    king_wen_analysis.print_comparison(&min_analysis);
                 }
                 IChingSubcommand::Analyze(AnalyzeSubcommand::Hexagram { number }) => {
                     let analysis = HexagramAnalysis::new(number)?;
                     analysis.print();
                 }
                 IChingSubcommand::Analyze(AnalyzeSubcommand::KingWen) => {
-                    let analyzer = SequenceAnalyzer {
-                        sequence: king_wen(),
-                    };
-                    analyzer.analyze().print();
+                    let analysis = SequenceAnalysis::new(king_wen())?;
+                    analysis.print();
                 }
                 IChingSubcommand::Analyze(AnalyzeSubcommand::ShortestDistance {
                     start,

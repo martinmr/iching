@@ -401,21 +401,13 @@ impl SequenceAnalysis {
         self.print_info();
         other.print_info();
     }
-}
 
-/// Analyzes a sequence of hexagrams.
-pub struct SequenceAnalyzer {
-    /// The sequence of hexagrams to analyze, as a vector of hexagram numbers.
-    pub sequence: Vec<usize>,
-}
-
-impl SequenceAnalyzer {
     /// Produces the analysis of the sequence of hexagrams.
-    pub fn analyze(&self) -> SequenceAnalysis {
+    pub fn new(sequence: Vec<usize>) -> Result<Self> {
         // Find the shortest paths between each pair of hexagrams.
         let mut shortest_paths = vec![];
-        for i in 1..self.sequence.len() {
-            let searcher = HexagramSearcher::new(self.sequence[i - 1], self.sequence[i]).unwrap();
+        for i in 1..sequence.len() {
+            let searcher = HexagramSearcher::new(sequence[i - 1], sequence[i])?;
             let paths = searcher.find_shortest_paths(false);
             shortest_paths.push(paths);
         }
@@ -434,30 +426,30 @@ impl SequenceAnalyzer {
             .map(|paths| paths.len() as u128)
             .product();
 
-        SequenceAnalysis {
-            sequence: self.sequence.clone(),
+        Ok(Self {
+            sequence,
             shortest_paths,
             total_ops,
             total_line_changes,
             total_paths,
-        }
+        })
     }
 }
 
 /// Finds the best random shuffling of the King Wen's sequence by the number of operations.
-pub fn find_min_random_sequence(num_sequences: usize) -> SequenceAnalysis {
-    (0..num_sequences)
+pub fn find_min_random_sequence(num_sequences: usize) -> Result<SequenceAnalysis> {
+    Ok((0..num_sequences)
         .into_par_iter()
         .map(|_| {
             let mut random_sequence = king_wen();
             random_sequence.shuffle(&mut rand::thread_rng());
-            SequenceAnalyzer {
-                sequence: random_sequence,
-            }
-            .analyze()
+            SequenceAnalysis::new(random_sequence)
         })
+        .collect::<Result<Vec<_>>>()?
+        .iter()
         .min_by_key(|analysis| analysis.total_ops)
         .unwrap()
+        .clone())
 }
 
 #[cfg(test)]
