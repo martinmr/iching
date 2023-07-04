@@ -5,7 +5,7 @@ use rand::seq::SliceRandom;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use std::collections::VecDeque;
 
-use crate::iching::{create_hexagram, Hexagram, HexagramLine, HEXAGRAMS};
+use crate::iching::{create_hexagram, Hexagram, HexagramLine, Trigram, HEXAGRAMS};
 
 #[derive(Clone, Debug, PartialEq)]
 #[allow(missing_docs)]
@@ -66,10 +66,103 @@ impl SearchOperation {
             Self::ReverseBottomTrigram => hexagram.reverse_bottom_trigram(),
             Self::FlipTrigrams => hexagram.flip_trigrams(),
             Self::MirrorTrigrams => hexagram.mirror_trigrams(),
-            Self::NuclearTrigrams => hexagram.nuclear_trigrams(),
+            Self::NuclearTrigrams => hexagram.use_nuclear_trigrams(),
             Self::MixTrigramsBottomFirst => hexagram.mix_trigrams_bottom_first(),
             Self::MixTrigramsTopFirst => hexagram.mix_trigrams_top_first(),
             Self::NoOp => *hexagram,
+        }
+    }
+}
+
+/// The result of analyzing a hexagram.
+pub struct HexagramAnalysis {
+    /// The hexagram to analyze.
+    pub hexagram: Hexagram,
+
+    /// The bottom trigram of the hexagram.
+    pub bottom_trigram: Trigram,
+
+    /// The top trigram of the hexagram.
+    pub top_trigram: Trigram,
+
+    /// The bottom nuclear trigram of the hexagram, that is, the trigram formed by the second,
+    /// third, and fourth lines.
+    pub bottom_nuclear_trigram: Trigram,
+
+    /// The top nuclear trigram of the hexagram, that is, the trigram formed by the third, fourth,
+    /// and fifth lines.
+    pub top_nuclear_trigram: Trigram,
+
+    /// The list of hexagrams that can be reached from this hexagram by applying a single operation.
+    pub reacheable_hexagrams: Vec<(Hexagram, SearchOperation)>,
+}
+
+impl HexagramAnalysis {
+    /// Creates a new hexagram analysis.
+    pub fn new(number: usize) -> Result<Self> {
+        // Validate and create the hexagram
+        if !(1..=64).contains(&number) {
+            bail!("Invalid hexagram number: {}", number);
+        }
+        let lines = HEXAGRAMS[number - 1];
+        let hexagram = create_hexagram(lines.0, lines.1);
+
+        // Compute the information about the hexagram.
+        let (bottom_trigram, top_trigram) = hexagram.trigrams();
+        let (bottom_nuclear_trigram, top_nuclear_trigram) = hexagram.nuclear_trigrams();
+        let reacheable_hexagrams = SearchOperation::all_operations()
+            .into_iter()
+            .map(|op| (op.apply(&hexagram), op))
+            .filter(|(reacheable, _)| reacheable.number != hexagram.number)
+            .collect();
+
+        Ok(Self {
+            hexagram,
+            bottom_trigram,
+            top_trigram,
+            bottom_nuclear_trigram,
+            top_nuclear_trigram,
+            reacheable_hexagrams,
+        })
+    }
+
+    /// Prints the hexagram analysis.
+    pub fn print(&self) {
+        println!(">>>>> Analysis of hexagram {}:", self.hexagram.number);
+        println!();
+        self.hexagram.print(None);
+        println!();
+
+        println!(">>> Bottom trigram:");
+        println!();
+        self.bottom_trigram.print();
+        println!();
+
+        println!(">>> Top trigram:");
+        println!();
+        self.top_trigram.print();
+        println!();
+
+        println!(">>> Bottom nuclear trigram:");
+        println!();
+        self.bottom_nuclear_trigram.print();
+        println!();
+
+        println!(">>> Top nuclear trigram:");
+        println!();
+        self.top_nuclear_trigram.print();
+        println!();
+
+        println!(">>> Reacheable hexagrams:");
+        println!();
+        for (hexagram, op) in &self.reacheable_hexagrams {
+            println!(
+                "> Hexagram {} can be reached by applying the operation {:?}",
+                hexagram.number, op
+            );
+            println!();
+            hexagram.print(None);
+            println!();
         }
     }
 }
@@ -256,7 +349,7 @@ impl SequenceAnalysis {
     /// Prints the entire analysis.
     pub fn print(&self) {
         // Print the part of the analysis concerning the whole sequence.
-        println!(">>>>>> Analysis of sequence of hexagrams");
+        println!(">>>>> Analysis of sequence of hexagrams");
         println!();
         self.print_info();
 
@@ -274,7 +367,7 @@ impl SequenceAnalysis {
 
     /// Prints a comparison between this analysis and another one.
     pub fn print_comparison(&self, other: &Self) {
-        println!(">>>>>> Comparison of sequence analyses");
+        println!(">>>>> Comparison of sequence analyses");
         println!();
         self.print_info();
         other.print_info();

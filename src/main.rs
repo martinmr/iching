@@ -6,7 +6,8 @@ pub mod iching_analyzer;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use iching_analyzer::{
-    find_min_random_sequence, king_wen, print_shortest_path, HexagramSearcher, SequenceAnalyzer,
+    find_min_random_sequence, king_wen, print_shortest_path, HexagramAnalysis, HexagramSearcher,
+    SequenceAnalyzer,
 };
 
 use crate::iching::{RandomnessMode, ReadingMethod};
@@ -14,6 +15,26 @@ use crate::iching::{RandomnessMode, ReadingMethod};
 /// Contains subcommands used for manipulating git repositories containing Trane courses.
 #[derive(Clone, Debug, Subcommand)]
 enum AnalyzeSubcommand {
+    #[clap(about = "Compare a random sequence to King Wen's sequence")]
+    CompareKingWen {
+        #[clap(
+            help = "The number of random sequences to generate. Only the one with the least \
+            operations will be printed"
+        )]
+        #[clap(default_value = "1")]
+        #[clap(short, long)]
+        num_sequences: usize,
+    },
+
+    #[clap(about = "Print an analysis of the given hexagram")]
+    Hexagram {
+        #[clap(help = "The hexagram to analyze")]
+        number: usize,
+    },
+
+    #[clap(about = "Print an analysis of King Wen's sequence")]
+    KingWen,
+
     #[clap(about = "Find the shortest path between two hexagrams")]
     ShortestDistance {
         #[clap(help = "The hexagram from which to start")]
@@ -26,20 +47,6 @@ enum AnalyzeSubcommand {
         #[clap(short, long)]
         #[clap(default_value = "false")]
         all: bool,
-    },
-
-    #[clap(about = "Print an analysis of King Wen's sequence")]
-    KingWen,
-
-    #[clap(about = "Compare a random sequence to King Wen's sequence")]
-    CompareKingWen {
-        #[clap(
-            help = "The number of random sequences to generate. Only the one with the least \
-            operations will be printed"
-        )]
-        #[clap(default_value = "1")]
-        #[clap(short, long)]
-        num_sequences: usize,
     },
 }
 
@@ -81,26 +88,6 @@ fn main() -> Result<()> {
         }
         Some(subcommand) => {
             match subcommand {
-                IChingSubcommand::Analyze(AnalyzeSubcommand::ShortestDistance {
-                    start,
-                    end,
-                    all,
-                }) => {
-                    // Perform the search.
-                    let searcher = HexagramSearcher::new(start, end)?;
-                    let paths = searcher.find_shortest_paths(all);
-
-                    // Print all the paths
-                    println!(">>> Shortest path search found {} path(s)", paths.len());
-                    println!();
-                    print_shortest_path(start, end, &paths)
-                }
-                IChingSubcommand::Analyze(AnalyzeSubcommand::KingWen) => {
-                    let analyzer = SequenceAnalyzer {
-                        sequence: king_wen(),
-                    };
-                    analyzer.analyze().print();
-                }
                 IChingSubcommand::Analyze(AnalyzeSubcommand::CompareKingWen { num_sequences }) => {
                     // Generate King Wen's sequence and analysis.
                     let king_wen_sequence = king_wen();
@@ -112,6 +99,32 @@ fn main() -> Result<()> {
                     // Generate random sequences and analyze them.
                     let min_sequence = find_min_random_sequence(num_sequences);
                     king_wen_analysis.print_comparison(&min_sequence);
+                }
+                IChingSubcommand::Analyze(AnalyzeSubcommand::Hexagram { number }) => {
+                    let analysis = HexagramAnalysis::new(number)?;
+                    analysis.print();
+                }
+                IChingSubcommand::Analyze(AnalyzeSubcommand::KingWen) => {
+                    let analyzer = SequenceAnalyzer {
+                        sequence: king_wen(),
+                    };
+                    analyzer.analyze().print();
+                }
+                IChingSubcommand::Analyze(AnalyzeSubcommand::ShortestDistance {
+                    start,
+                    end,
+                    all,
+                }) => {
+                    // Perform the search.
+                    let searcher = HexagramSearcher::new(start, end)?;
+                    let paths = searcher.find_shortest_paths(all);
+
+                    // Print all the paths
+                    println!(">>>>> Shortest path search from {} to {}", start, end);
+                    println!();
+                    println!(">>> Shortest path search found {} path(s)", paths.len());
+                    println!();
+                    print_shortest_path(start, end, &paths)
                 }
             }
         }

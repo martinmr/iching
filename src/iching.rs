@@ -39,7 +39,6 @@ impl From<u8> for Line {
 }
 
 /// The position of a line in a trigram.
-#[allow(dead_code)]
 #[allow(missing_docs)]
 pub enum TrigramLine {
     First,
@@ -49,7 +48,6 @@ pub enum TrigramLine {
 
 impl TrigramLine {
     /// Converts a line into an array index.
-    #[allow(dead_code)]
     fn line_to_index(&self) -> usize {
         match self {
             TrigramLine::First => 0,
@@ -72,7 +70,6 @@ pub struct Trigram {
 
 impl Trigram {
     /// Prints the trigram to the console.
-    #[allow(dead_code)]
     pub fn print(&self) {
         println!("     {}\n", self.number);
         for line in self.lines.iter().rev() {
@@ -85,14 +82,12 @@ impl Trigram {
     }
 
     /// Returns the trigram obtained by reversing the order of the lines in this trigram.
-    #[allow(dead_code)]
     pub fn reverse(&self) -> Trigram {
         let lines = [self.lines[2], self.lines[1], self.lines[0]];
         TRIGRAM_INDEX.get(&lines).copied().unwrap()
     }
 
     /// Returns the trigram obtained by flipping the lines in this trigram.
-    #[allow(dead_code)]
     pub fn inverse(&self) -> Trigram {
         let lines = [
             self.lines[0].inverse(),
@@ -103,7 +98,6 @@ impl Trigram {
     }
 
     /// Returns the trigram obtained by inverting the given line.
-    #[allow(dead_code)]
     pub fn inverse_line(&self, line: TrigramLine) -> Trigram {
         let mut lines = self.lines;
         lines[line.line_to_index()] = lines[line.line_to_index()].inverse();
@@ -210,6 +204,26 @@ impl Hexagram {
         let bottom = Trigram { number, lines };
 
         let lines = [self.lines[3], self.lines[4], self.lines[5]];
+        let number = TRIGRAM_INDEX
+            .get(&lines)
+            .map(|trigram| trigram.number)
+            .unwrap();
+        let top = Trigram { number, lines };
+
+        (bottom, top)
+    }
+
+    /// Returns the bottom and top nuclear trigrams of the hexagram. The nuclear trigrams are the
+    /// trigrams formed by the inner lines of the hexagram.
+    pub fn nuclear_trigrams(&self) -> (Trigram, Trigram) {
+        let lines = [self.lines[1], self.lines[2], self.lines[3]];
+        let number = TRIGRAM_INDEX
+            .get(&lines)
+            .map(|trigram| trigram.number)
+            .unwrap();
+        let bottom = Trigram { number, lines };
+
+        let lines = [self.lines[2], self.lines[3], self.lines[4]];
         let number = TRIGRAM_INDEX
             .get(&lines)
             .map(|trigram| trigram.number)
@@ -350,7 +364,7 @@ impl Hexagram {
 
     /// Returns the hexagram obtained by superimposing the upper and lower nuclear trigrams of
     /// this hexagram.
-    pub fn nuclear_trigrams(&self) -> Hexagram {
+    pub fn use_nuclear_trigrams(&self) -> Hexagram {
         let lines = [
             self.lines[1],
             self.lines[2],
