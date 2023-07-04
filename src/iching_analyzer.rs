@@ -7,21 +7,50 @@ use std::collections::VecDeque;
 
 use crate::iching::{create_hexagram, Hexagram, HexagramLine, Trigram, HEXAGRAMS};
 
+/// The operations that can be applied to transform a hexagram.
 #[derive(Clone, Debug, PartialEq)]
-#[allow(missing_docs)]
 pub enum SearchOperation {
+    /// No operation.
     NoOp,
+
+    /// Inverse a single line.
     InverseLine(HexagramLine),
+
+    /// Inverse the bottom trigram.
     InverseBottomTrigram,
+
+    /// Inverse the top trigram.
     InverseTopTrigram,
+
+    /// Reverse the order of the lines in the bottom trigram.
     ReverseBottomTrigram,
+
+    /// Reverse the order of the lines in the top trigram.
     ReverseTopTrigram,
+
+    /// Flip the bottom and top trigrams.
     FlipTrigrams,
+
+    /// Mirror the bottom and top trigrams along the line that separates them.
     MirrorTrigrams,
+
+    /// Create a new hexagram out of the bottom and top nuclear trigrams.
     NuclearTrigrams,
+
+    /// Inverse all the lines in the hexagram.
     InverseHexagram,
+
+    /// Reverse the order of the lines in the hexagram.
     ReverseHexagram,
+
+    /// Create a new hexagram out of the bottom and top trigrams. The first line of the new hexagram
+    /// is the first line of the bottom trigram. The second line of the new hexagram is the first
+    /// line of the top trigram, and so on.
     MixTrigramsBottomFirst,
+
+    /// Create a new hexagram out of the bottom and top trigrams. The first line of the new hexagram
+    /// is the first line of the top trigram. The second line of the new hexagram is the first
+    /// line of the bottom trigram, and so on.
     MixTrigramsTopFirst,
 }
 

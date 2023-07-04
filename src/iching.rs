@@ -39,6 +39,7 @@ impl From<u8> for Line {
 }
 
 /// The position of a line in a trigram.
+#[derive(Clone, Debug, PartialEq)]
 #[allow(missing_docs)]
 pub enum TrigramLine {
     First,
