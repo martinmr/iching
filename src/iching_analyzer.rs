@@ -49,6 +49,7 @@ impl SearchOperation {
         ]
     }
 
+    /// Applies the search operation to the given hexagram.
     fn apply(&self, hexagram: &Hexagram) -> Hexagram {
         match self {
             Self::InverseLine(HexagramLine::First) => hexagram.inverse_line(HexagramLine::First),
@@ -113,10 +114,10 @@ pub fn count_line_changes(path: &Path) -> u64 {
 /// Given two hexagrams, finds the shortest path between them.
 pub struct HexagramSearcher {
     /// The initial hexagram from which to start the search.
-    pub initial_hexagram: Hexagram,
+    pub start_hexagram: Hexagram,
 
     /// The final hexagram to reach.
-    pub final_hexagram: Hexagram,
+    pub end_hexagram: Hexagram,
 }
 
 impl HexagramSearcher {
@@ -133,12 +134,12 @@ impl HexagramSearcher {
         // Get the lines and hexagrams.
         let start_lines = HEXAGRAMS[start - 1];
         let end_lines = HEXAGRAMS[end - 1];
-        let initial_hexagram = create_hexagram(start_lines.0, start_lines.1);
-        let final_hexagram = create_hexagram(end_lines.0, end_lines.1);
+        let start_hexagram = create_hexagram(start_lines.0, start_lines.1);
+        let end_hexagram = create_hexagram(end_lines.0, end_lines.1);
 
         Ok(Self {
-            initial_hexagram,
-            final_hexagram,
+            start_hexagram,
+            end_hexagram,
         })
     }
 
@@ -168,7 +169,7 @@ impl HexagramSearcher {
     pub fn find_shortest_paths(&self, all: bool) -> Vec<Path> {
         // Create a queue of paths to search to perform a breadth-first search.
         let mut queue: VecDeque<Vec<(Hexagram, SearchOperation)>> = VecDeque::new();
-        queue.push_back(vec![(self.initial_hexagram, SearchOperation::NoOp)]);
+        queue.push_back(vec![(self.start_hexagram, SearchOperation::NoOp)]);
         let ops = SearchOperation::all_operations();
 
         // Store a list of all the shortest paths. Then search until the queue is empty, or we find
@@ -196,7 +197,7 @@ impl HexagramSearcher {
                 // new path to the queue.
                 let mut new_path = path.clone();
                 new_path.push((new_hexagram, operation.clone()));
-                if new_hexagram == self.final_hexagram {
+                if new_hexagram == self.end_hexagram {
                     shortest_paths.push(new_path.clone());
                 } else {
                     queue.push_back(new_path);
@@ -349,8 +350,8 @@ mod test {
     #[test]
     fn test_find_path() {
         let searcher = HexagramSearcher {
-            initial_hexagram: create_hexagram(1, HEXAGRAMS[0].1),
-            final_hexagram: create_hexagram(2, HEXAGRAMS[1].1),
+            start_hexagram: create_hexagram(1, HEXAGRAMS[0].1),
+            end_hexagram: create_hexagram(2, HEXAGRAMS[1].1),
         };
         let expected_path = vec![vec![
             (create_hexagram(1, HEXAGRAMS[0].1), SearchOperation::NoOp),
