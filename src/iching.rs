@@ -361,6 +361,36 @@ impl Hexagram {
         ];
         HEXAGRAM_INDEX.get(&lines).copied().unwrap()
     }
+
+    /// Returns the hexagram obtained by mixing the bottom and top trigrams of this hexagram,
+    /// with the first line of the bottom trigram being the first line of the result.
+    pub fn mix_trigrams_bottom_first(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            bottom.lines[0],
+            top.lines[0],
+            bottom.lines[1],
+            top.lines[1],
+            bottom.lines[2],
+            top.lines[2],
+        ];
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
+    }
+
+    /// Returns the hexagram obtained by mixing the bottom and top trigrams of this hexagram,
+    /// with the first line of the top trigram being the first line of the result.
+    pub fn mix_trigrams_top_first(&self) -> Hexagram {
+        let (bottom, top) = self.trigrams();
+        let lines = [
+            top.lines[0],
+            bottom.lines[0],
+            top.lines[1],
+            bottom.lines[1],
+            top.lines[2],
+            bottom.lines[2],
+        ];
+        HEXAGRAM_INDEX.get(&lines).copied().unwrap()
+    }
 }
 
 /// The list of all I Ching hexagrams.

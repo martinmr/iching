@@ -21,10 +21,12 @@ pub enum SearchOperation {
     NuclearTrigrams,
     InverseHexagram,
     ReverseHexagram,
+    MixTrigramsBottomFirst,
+    MixTrigramsTopFirst,
 }
 
 impl SearchOperation {
-    /// Returns all possible search operations in the order they should be applied.
+    /// Returns all possible search operations.
     fn all_operations() -> Vec<SearchOperation> {
         vec![
             Self::InverseLine(HexagramLine::First),
@@ -42,6 +44,8 @@ impl SearchOperation {
             Self::NuclearTrigrams,
             Self::InverseHexagram,
             Self::ReverseHexagram,
+            Self::MixTrigramsBottomFirst,
+            Self::MixTrigramsTopFirst,
         ]
     }
 
@@ -62,6 +66,8 @@ impl SearchOperation {
             Self::FlipTrigrams => hexagram.flip_trigrams(),
             Self::MirrorTrigrams => hexagram.mirror_trigrams(),
             Self::NuclearTrigrams => hexagram.nuclear_trigrams(),
+            Self::MixTrigramsBottomFirst => hexagram.mix_trigrams_bottom_first(),
+            Self::MixTrigramsTopFirst => hexagram.mix_trigrams_top_first(),
             Self::NoOp => *hexagram,
         }
     }
